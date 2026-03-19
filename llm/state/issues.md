@@ -12,63 +12,15 @@
 
 ## 🟡 Важные
 
-### Issue #1: MyObject.real_position не обновляется при анимации
+### ~~Issue #1: MyObject.real_position не обновляется при анимации~~ ✅ ИСПРАВЛЕНО
 
-**Описание:**
-`MyObject` движется по кругу, обновляя `self.position` напрямую в `update_position()`. Но `self.real_position` (используется в `apply_transform()`) не обновляется.
+**Исправлено:** 2026-03-19 (сессия 3)
 
-**Код:**
-```python
-# src/my_object.py
-def update_position(self, dt: float):
-    self.angle += self.speed * dt
-    x = self.radius * math.cos(self.angle)
-    z = self.radius * math.sin(self.angle)
-    self.position = (x, 0, z)  # ← real_position не обновляется!
-```
+**Решение:** Комбинация двух изменений:
+1. `my_object.py`: `update_position()` теперь обновляет `self.real_position = np.array(self.position)` после вычисления новой позиции
+2. `update_manager.py`: после `my_object.update_position(dt)` вызывается `my_object.apply_transform(a, b)` с текущими параметрами зума
 
-**Проблема:**
-При зуме `apply_transform()` использует устаревшую `real_position` (начальную).
-
-**Возможные последствия:**
-- Зум может применяться к неправильной позиции
-- Движение может "прыгать" после зума
-
-**Пока не проявляется, потому что:**
-- MyObject создается в позиции (0, 0, 0)?
-- Или начальная позиция совпадает с текущей?
-
-**Как воспроизвести:**
-1. Запустить main.py
-2. Подождать пока MyObject переместится
-3. Сделать zoom (E/Q)
-4. Наблюдать за позицией MyObject
-
-**Возможные решения:**
-
-*Вариант 1:* Обновлять `real_position` при анимации
-```python
-def update_position(self, dt):
-    self.angle += self.speed * dt
-    x = self.radius * math.cos(self.angle)
-    z = self.radius * math.sin(self.angle)
-    self.position = (x, 0, z)
-    self.real_position = np.array(self.position)  # ← добавить
-```
-
-*Вариант 2:* Переопределить `apply_transform()` для анимированных объектов
-```python
-def apply_transform(self, a, b):
-    """Для движущихся объектов - только масштаб, позиция неизменна"""
-    # position остается как есть (управляется анимацией)
-    self.scale = self.real_scale * a
-```
-
-*Вариант 3:* Использовать отдельный `AnimatedScalable` класс
-
-**Приоритет:** 🟡 Средний (работает, но логика неоднозначная)
-
-**Назначено:** Не назначено
+Это обеспечивает корректное поведение MyObject при активном зуме: объект движется по кругу И масштабируется/сдвигается по текущей zoom-трансформации
 
 ---
 
@@ -303,4 +255,6 @@ except (AssertionError, AttributeError, RuntimeError):
 
 ---
 
-**Итого:** 5 известных issues (0 критических, 2 важных, 3 незначительных)
+**Итого:** 5 известных issues (0 критических, 1 важный, 3 незначительных, 1 исправлен)
+
+**См. также:** `llm/review_and_ideas.md` — дополнительные проблемы и идеи (мёртвый код в SceneSetup, identify_invariant_point вызывается впустую, import time magic)

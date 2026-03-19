@@ -63,6 +63,12 @@ class UpdateManager:
         # Update custom objects
         if self.my_object:
             self.my_object.update_position(dt)
+            # Re-apply zoom transform after position change
+            if self.zoom_manager:
+                self.my_object.apply_transform(
+                    self.zoom_manager.a_transformation,
+                    self.zoom_manager.b_translation
+                )
 
         # Update zoom system (calculate invariant point)
         if self.zoom_manager:

@@ -152,7 +152,7 @@ print("   > Components registered in managers")
 # ===== UPDATE FUNCTIONS =====
 def update():
     """Global update handler."""
-    import time
+    import time  # ursina replaces built-in time with its own module providing time.dt
     update_manager.update_all(time.dt)
 
 def input(key):

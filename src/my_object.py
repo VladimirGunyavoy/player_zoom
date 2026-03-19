@@ -7,6 +7,7 @@ Can change speed via input controls.
 """
 
 import math
+import numpy as np
 from ursina import color
 from .scalable import Scalable
 
@@ -73,6 +74,7 @@ class MyObject(Scalable):
 
         # Update position
         self._update_position()
+        self.real_position = np.array(self.position)
 
     def increase_speed(self, delta: float = 0.5) -> None:
         """Increase angular speed."""

@@ -97,17 +97,11 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 
 ## 🗓️ Среднесрочные цели (следующие задачи)
 
-### 4. Исправить известные issues
+### 4. ~~Исправить Issue #1 (MyObject.real_position)~~ ✅ Исправлено (сессия 3)
 
-**Приоритет:** Issue #1 (MyObject.real_position)
+**Статус:** Завершено
 
-**Статус:** Не начато
-
-**Задачи:**
-- [ ] Исследовать как проявляется проблема
-- [ ] Выбрать подход (см. state/issues.md)
-- [ ] Реализовать решение
-- [ ] Протестировать зум на движущемся объекте
+**Решение:** обновление real_position в update_position() + re-apply zoom в UpdateManager
 
 ---
 

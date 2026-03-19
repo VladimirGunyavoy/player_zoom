@@ -1,6 +1,6 @@
 # Current State - Текущее состояние проекта
 
-**Last updated:** 2026-03-19 (сессия 2)
+**Last updated:** 2026-03-19 (сессия 3)
 
 ---
 
@@ -51,10 +51,7 @@
   - ColorManager ищет `config/json/colors.json` но не находит
   - Не критично, но warning в консоли
 
-- ❌ **MyObject.real_position не обновляется при анимации**
-  - См. детали в `issues.md`
-  - Потенциальный баг: зум может применяться к устаревшей real_position
-  - Пока не проявляется т.к. зум применяется к текущей позиции
+- ~~❌ **MyObject.real_position не обновляется при анимации**~~ ✅ Исправлено (сессия 3)
 
 ---
 
@@ -94,6 +91,12 @@ main.py                   ~180 lines
 
 ## 📝 Недавние изменения
 
+### 2026-03-19 (сессия 3):
+- ✅ Фикс Issue #1: MyObject.real_position теперь обновляется при анимации
+- ✅ UpdateManager: после обновления позиции MyObject применяется текущий zoom transform
+- ✅ Добавлен комментарий к `import time` в main.py (ursina magic)
+- ✅ Создан `llm/review_and_ideas.md` — ревью кодовой базы с потенциальными проблемами и идеями
+
 ### 2026-03-19 (сессия 2):
 - ✅ Добавлена клавиша `U` для toggle frame visibility
 - ✅ Фикс: скрытый Frame теперь получает zoom трансформации (убрана проверка `enabled` в `update_transform`)
@@ -116,9 +119,10 @@ main.py                   ~180 lines
 См. [`plan.md`](plan.md) для детального плана.
 
 **Краткая версия:**
-1. Исправить Issue #1 (MyObject.real_position при анимации)
+1. ~~Исправить Issue #1 (MyObject.real_position при анимации)~~ ✅
 2. Исправить Issue #2 (создать config/json/colors.json)
 3. Идеи в backlog → `plan.md`
+4. См. `llm/review_and_ideas.md` для дополнительных идей
 
 ---
 

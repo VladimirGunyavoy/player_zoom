@@ -6,6 +6,36 @@
 
 ---
 
+## 2026-03-19 (сессия 3) - Fix MyObject zoom + code review
+
+**Что сделано:**
+- 🐛 Исправлен Issue #1: MyObject.real_position теперь обновляется при анимации — зум на движущемся объекте работает корректно
+- 🔧 UpdateManager: после обновления позиции MyObject применяется текущая zoom-трансформация
+- 💬 Добавлен комментарий к `import time` в main.py (поведение ursina)
+- 📖 Создан `llm/review_and_ideas.md` — полное ревью кодовой базы с 4 реальными проблемами и 4 идеями улучшений
+
+**Технические детали:**
+
+`src/my_object.py` — добавлена строка после вычисления позиции:
+```python
+self.real_position = np.array(self.position)
+```
+
+`src/update_manager.py` — после `my_object.update_position(dt)`:
+```python
+if self.zoom_manager:
+    self.my_object.apply_transform(
+        self.zoom_manager.a_transformation,
+        self.zoom_manager.b_translation
+    )
+```
+
+Без второго изменения MyObject при активном зуме двигался бы по незумированному кругу — трансформация применялась только при нажатии E/Q, а не каждый кадр.
+
+**Участники:** Пользователь + Claude Opus 4.6
+
+---
+
 ## 2026-03-19 (сессия 2) - Toggle Frame visibility + InputManager документация
 
 **Что сделано:**
