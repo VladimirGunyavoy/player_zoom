@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l llm/**/*.md llm/*.md llm/tools/*.py)",
+      "Bash(timeout 3 python main.py)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git init:*)",
+      "Bash(git remote:*)"
+    ]
+  }
+}
