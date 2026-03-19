@@ -6,6 +6,31 @@
 
 ---
 
+## 2026-03-19 (сессия 2) - Toggle Frame visibility + InputManager документация
+
+**Что сделано:**
+- ⌨️ Добавлена клавиша `U` → `frame.toggle_visibility()` в InputManager
+- 🐛 Фикс: при скрытом Frame (`enabled=False`) зум пропускал его объекты — при включении фрейм оказывался не на месте
+- 📖 Создана документация `llm/context/input_manager_guide.md` с таблицей клавиш, гайдом добавления новых команд, примерами
+- 📋 Обновлён backlog в `state/plan.md` — добавлена задача "Рефакторинг InputManager" с декларативной структурой
+
+**Технические детали:**
+
+`src/zoom_manager.py` — убрана проверка `obj.enabled` в `update_transform()`:
+```python
+# Было:
+if hasattr(obj, 'enabled') and obj.enabled and hasattr(obj, 'position'):
+# Стало:
+if hasattr(obj, 'position'):
+```
+Причина: трансформация — математическое обновление координат, не рендеринг. Скрытый объект должен продолжать получать трансформации, иначе при включении он окажется на старой позиции.
+
+`src/input_manager.py` — добавлен обработчик `U` перед секцией MY OBJECT SPEED CONTROL.
+
+**Участники:** Пользователь + Claude Sonnet 4.6
+
+---
+
 ## 2026-03-19 - Создание LLM контекста и git репозитория
 
 **Что сделано:**

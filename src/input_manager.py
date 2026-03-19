@@ -95,6 +95,11 @@ class InputManager:
                 print("   [Zoom] Reset")
                 return
 
+        # === FRAME ===
+        if key == 'u' and self.frame:
+            self.frame.toggle_visibility()
+            return
+
         # === MY OBJECT SPEED CONTROL ===
         if self.my_object:
             if key == '1':

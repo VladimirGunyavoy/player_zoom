@@ -65,7 +65,7 @@ class ZoomManager:
         """Apply current transformation to all registered objects."""
         for obj in self.objects.values():
             try:
-                if hasattr(obj, 'enabled') and obj.enabled and hasattr(obj, 'position'):
+                if hasattr(obj, 'position'):
                     obj.apply_transform(self.a_transformation, self.b_translation)
             except (AssertionError, AttributeError, RuntimeError) as e:
                 # Object is invalid - skip without crash
