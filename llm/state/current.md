@@ -1,6 +1,6 @@
 # Current State - Текущее состояние проекта
 
-**Last updated:** 2026-03-19 (сессия 4)
+**Last updated:** 2026-03-19 (сессия 5)
 
 ---
 
@@ -41,6 +41,13 @@
 - ✅ **Математика (src/math/)**
   - `DiffDrive` - симуляция дифф. привода (unicycle model)
   - RK4 step, derivative, JIT-ready (numpy + math.cos/sin)
+
+- ✅ **Визуализация траекторий (сессия 5)**
+  - `src/trajectories.py` — `generate_trajectories(start_state, pattern_length, tau, N, seed, pattern_index)`
+  - `src/spore.py` — статичный маркер-quad, billboard=True, наследник MyObject
+  - `src/spore_manager.py` — управление размером всех спор (клавиши 3/4, мультипликативно ×1.2)
+  - `src/scalable_line.py` — линия между двумя точками, zoom-aware через override apply_transform
+  - `PATTERN_INDICES` + `PATTERN_COLORS` в main.py — контроль какие паттерны и каким цветом
 
 - ✅ **Инфраструктура**
   - ColorManager - управление цветами (с fallback на дефолты)
@@ -105,6 +112,14 @@ main.py                   ~130 lines (упрощён)
 ---
 
 ## 📝 Недавние изменения
+
+### 2026-03-19 (сессия 5):
+- ✅ `src/trajectories.py` — генерация DiffDrive-траекторий по паттернам управления
+- ✅ `src/spore.py` — статичный quad-маркер (наследник MyObject, billboard)
+- ✅ `src/spore_manager.py` — управление размером всех спор (3/4, мультипликативно)
+- ✅ `src/scalable_line.py` — scalable-линия, обновляет mesh-вершины при zoom
+- ✅ MyObject принимает `model` через kwargs.pop (для override в подклассах)
+- ✅ Фикс: Spore.real_position обновляется после установки pos
 
 ### 2026-03-19 (сессия 4):
 - ✅ Mouse wheel zoom (scroll up/down = zoom in/out)
@@ -181,4 +196,4 @@ pip install ursina numpy watchdog
 
 ---
 
-**Статус:** 🟢 Проект стабилен, основной функционал работает
+**Статус:** 🟢 Проект стабилен, визуализация траекторий работает

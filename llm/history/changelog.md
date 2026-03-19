@@ -6,6 +6,36 @@
 
 ---
 
+## 2026-03-19 (сессия 5) - Trajectory visualization: Spore + ScalableLine
+
+**Что сделано:**
+- 🌱 `src/spore.py` — статичный маркер (quad + billboard), наследник MyObject
+- 🎛️ `src/spore_manager.py` — управление размером всех спор разом (клавиши 3/4, ×1.2)
+- 〰️ `src/scalable_line.py` — линия между двумя точками, реагирует на zoom
+- 📐 `src/trajectories.py` — генерация DiffDrive-траекторий: `generate_trajectories(start_state, pattern_length, tau, N, seed, pattern_index=None)`
+- 🎨 `PATTERN_INDICES` + `PATTERN_COLORS` в main.py — выбор паттернов и цветов
+
+**Технические детали:**
+
+`ScalableLine` переопределяет `apply_transform` — обновляет вершины меша напрямую:
+```python
+def apply_transform(self, a, b):
+    p1 = self.real_p1 * a + b
+    p2 = self.real_p2 * a + b
+    self.model.vertices = [Vec3(*p1), Vec3(*p2)]
+    self.model.generate()
+```
+
+`MyObject` теперь принимает `model` через `kwargs.pop('model', 'sphere')` — позволяет подклассам переопределять модель без двойной загрузки.
+
+`Spore` передаёт `model='quad'` сразу в super().__init__() — иначе было бы 2 вызова load_model на объект (сначала sphere, потом quad).
+
+Координатный маппинг notebook → Ursina: `pos=(x, theta, y)` — theta становится высотой (y), robot_y становится глубиной (z).
+
+**Git commits:** (текущая сессия)
+
+---
+
 ## 2026-03-19 (сессия 4) - ObjectManager + key bindings + DiffDrive
 
 **Что сделано:**

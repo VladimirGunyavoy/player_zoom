@@ -23,13 +23,14 @@ Controls:
 - H: debug info
 """
 
+from ast import pattern
 import sys
 import os
 
 # Add src path to PYTHONPATH
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-from ursina import Ursina, application
+from ursina import Ursina, application, Entity, Mesh, Vec3
 from src.scene_setup import SceneSetup
 from src.zoom_manager import ZoomManager
 from src.window_manager import WindowManager
@@ -39,6 +40,11 @@ from src.input_manager import InputManager
 from src.update_manager import UpdateManager
 from src.object_manager import ObjectManager
 from src.my_object import MyObject
+from src.spore import Spore
+from src.spore_manager import SporeManager
+from src.scalable_line import ScalableLine
+from src.trajectories import generate_trajectories
+import numpy as np
 from ursina import color
 
 
@@ -94,11 +100,57 @@ print("   > Floor created")
 object_manager = ObjectManager(zoom_manager)
 
 # ===== CREATING GAME OBJECTS =====
-my_object_1 = object_manager.create(MyObject, 'my_object', radius=1.5, speed=1.0, color_value=color.yellow)
+# my_object_1 = object_manager.create(MyObject, 'my_object', radius=1.5, speed=1.0, color_value=color.yellow)
+
+# ===== TRAJECTORY VISUALIZATION =====
+PATTERN_COLORS = [
+    color.rgb(0.27, 0.80, 0.58),   # мятный
+    color.rgb(0.94, 0.45, 0.45),   # коралловый
+    color.rgb(0.40, 0.65, 0.95),   # голубой
+    color.rgb(0.95, 0.78, 0.30),   # золотой
+    color.rgb(0.72, 0.45, 0.95),   # лавандовый
+    color.rgb(0.95, 0.55, 0.20),   # оранжевый
+    color.rgb(0.40, 0.88, 0.82),   # бирюзовый
+    color.rgb(0.90, 0.40, 0.70),   # розовый
+]
+
+# PATTERN_INDICES = [0, 1, 2, 3, 4, 5, 6, 7]  # ← список паттернов для отображения
+
+PATTERN_INDICES = [0] 
+N = 500
+tau = 1
+pattern_length = 4
+
+
+spore_manager = SporeManager(zoom_manager)
+
+for pi, pattern_index in enumerate(PATTERN_INDICES):
+    c = PATTERN_COLORS[pi % len(PATTERN_COLORS)]
+    trajectories = generate_trajectories(
+        start_state=[0.0, 0.0, 0.0],
+        pattern_length=pattern_length,
+        tau=tau,
+        N=N,
+        seed=41,
+        pattern_index=pattern_index
+    )
+    for i, traj in enumerate(trajectories):
+        for j, state in enumerate(traj):
+            x, y, theta = state
+            spore = object_manager.create(Spore, f'spore_{pi}_{i}_{j}', pos=(x, theta, y), color_value=c)
+            spore_manager.register(spore)
+        for k in range(len(traj) - 1):
+            p1 = (traj[k][0], traj[k][2], traj[k][1])
+            p2 = (traj[k+1][0], traj[k+1][2], traj[k+1][1])
+            line = ScalableLine(p1, p2, color=c, thickness=5)
+            zoom_manager.register_object(line, name=f'line_{pi}_{i}_{k}')
+
 
 # ===== KEY BINDINGS =====
-object_manager.bind(my_object_1.decrease_speed, trigger=lambda key: key == '1' and not scene_setup.input_frozen)
-object_manager.bind(my_object_1.increase_speed, trigger=lambda key: key == '2' and not scene_setup.input_frozen)
+# object_manager.bind(my_object_1.decrease_speed, trigger=lambda key: key == '1' and not scene_setup.input_frozen)
+# object_manager.bind(my_object_1.increase_speed, trigger=lambda key: key == '2' and not scene_setup.input_frozen)
+object_manager.bind(spore_manager.decrease_size, trigger=lambda key: key == '3' and not scene_setup.input_frozen)
+object_manager.bind(spore_manager.increase_size, trigger=lambda key: key == '4' and not scene_setup.input_frozen)
 
 print("   > MyObject created (moving sphere)")
 

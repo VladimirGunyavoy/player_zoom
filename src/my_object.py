@@ -39,8 +39,8 @@ class MyObject(GameObject):
         """
         # Initialize as Scalable sphere
         super().__init__(
-            model='sphere',
-            scale=1/5,
+            model=kwargs.pop('model', 'sphere'),
+            scale=0.05,
             color=color_value,
             **kwargs
         )
