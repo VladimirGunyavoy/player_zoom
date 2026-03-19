@@ -43,6 +43,7 @@ from src.my_object import MyObject
 from src.spore import Spore
 from src.spore_manager import SporeManager
 from src.scalable_line import ScalableLine
+from src.scalable_surface import ScalableSurface
 from src.trajectories import generate_trajectories
 import numpy as np
 from ursina import color
@@ -114,12 +115,12 @@ PATTERN_COLORS = [
     color.rgb(0.90, 0.40, 0.70),   # розовый
 ]
 
-# PATTERN_INDICES = [0, 1, 2, 3, 4, 5, 6, 7]  # ← список паттернов для отображения
+PATTERN_INDICES = [0, 1, 2, 3, 4, 5, 6, 7]  # ← список паттернов для отображения
 
-PATTERN_INDICES = [0] 
-N = 500
+# PATTERN_INDICES = [0, 1, 2, 3, 4, 5] 
+N = 50
 tau = 1
-pattern_length = 4
+pattern_length = 2
 
 
 spore_manager = SporeManager(zoom_manager)
@@ -134,16 +135,31 @@ for pi, pattern_index in enumerate(PATTERN_INDICES):
         seed=41,
         pattern_index=pattern_index
     )
-    for i, traj in enumerate(trajectories):
-        for j, state in enumerate(traj):
-            x, y, theta = state
-            spore = object_manager.create(Spore, f'spore_{pi}_{i}_{j}', pos=(x, theta, y), color_value=c)
-            spore_manager.register(spore)
-        for k in range(len(traj) - 1):
-            p1 = (traj[k][0], traj[k][2], traj[k][1])
-            p2 = (traj[k+1][0], traj[k+1][2], traj[k+1][1])
-            line = ScalableLine(p1, p2, color=c, thickness=5)
-            zoom_manager.register_object(line, name=f'line_{pi}_{i}_{k}')
+    # # ---- ПОДХОД 1: споры + линии ----
+    # for i, traj in enumerate(trajectories):
+    #     for j, state in enumerate(traj):
+    #         x, y, theta = state
+    #         spore = object_manager.create(Spore, f'spore_{pi}_{i}_{j}', pos=(x, theta, y), color_value=c)
+    #         spore_manager.register(spore)
+    #     for k in range(len(traj) - 1):
+    #         p1 = (traj[k][0], traj[k][2], traj[k][1])
+    #         p2 = (traj[k+1][0], traj[k+1][2], traj[k+1][1])
+    #         line = ScalableLine(p1, p2, color=c, thickness=5)
+    #         zoom_manager.register_object(line, name=f'line_{pi}_{i}_{k}')
+
+    # Сортируем траектории по углу конечной точки (веер), чтобы соседние в mesh были соседними пространственно
+    trajectories.sort(key=lambda traj: np.arctan2(traj[-1][1], traj[-1][0]))
+
+    # ---- ПОДХОД 2: полупрозрачная поверхность ----
+    grid = [[(s[0], s[2], s[1]) for s in traj] for traj in trajectories]
+    surface = ScalableSurface(grid, color=c, alpha=0.5, double_sided=True)
+    zoom_manager.register_object(surface, name=f'surface_{pi}')
+
+    # ---- ПОДХОД 3: скелет (wireframe сетка точек) ----
+    grid = [[(s[0], s[2], s[1]) for s in traj] for traj in trajectories]
+    skeleton = ScalableSurface(grid, wireframe=True, color=color.black)
+    skeleton.setDepthOffset(1)
+    zoom_manager.register_object(skeleton, name=f'skeleton_{pi}')
 
 
 # ===== KEY BINDINGS =====
