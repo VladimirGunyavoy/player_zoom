@@ -8,10 +8,12 @@ from typing import Optional, List, Tuple, TYPE_CHECKING
 
 from .scalable import Scalable
 from .color_manager import ColorManager
+from .frame import Frame
 
 if TYPE_CHECKING:
     from .input_manager import InputManager
     from .update_manager import UpdateManager
+    from .zoom_manager import ZoomManager
 
 # Class for setting up scene, camera and lighting
 class SceneSetup:
@@ -65,6 +67,8 @@ class SceneSetup:
 
         window.color = self.color_manager.get_color('scene', 'window_background')
         self._update_cursor_state()
+
+        self.frame: Frame = Frame(color_manager=self.color_manager, origin_scale=0.05)
         
     def _update_cursor_state(self) -> None:
         """Update cursor state according to input_frozen flag."""
@@ -104,6 +108,15 @@ class SceneSetup:
 
         if key == 'q':
             application.quit()
+
+    def toggle_frame(self) -> None:
+        """Toggle frame visibility (U key)."""
+        self.frame.toggle_visibility()
+
+    def register_frame_in_zoom(self, zoom_manager: "ZoomManager") -> None:
+        """Register frame entities in zoom manager."""
+        for i, entity in enumerate(self.frame.entities):
+            zoom_manager.register_object(entity, name=f'frame_child_{i}')
 
     def enable_input_manager_mode(self, enabled: bool = True) -> None:
         """Enable or disable InputManager mode."""

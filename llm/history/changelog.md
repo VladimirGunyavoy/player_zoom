@@ -6,6 +6,40 @@
 
 ---
 
+## 2026-03-19 (сессия 4) - ObjectManager + key bindings + DiffDrive
+
+**Что сделано:**
+- 🖱️ Mouse wheel zoom: scroll up/down → zoom in/out (в InputManager)
+- 🏗️ `ObjectManager` — фабрика и реестр игровых объектов с binding system
+- 🧱 `GameObject(Scalable)` — базовый класс с `tick(dt)` stub в scalable.py
+- 📦 `Frame` перенесён внутрь `SceneSetup` (toggle_frame, register_frame_in_zoom)
+- ⌨️ Key binding system: `bind(func, trigger=lambda key: ...)` — условия в лямбдах
+- 🧮 `src/math/diff_drive.py` — unicycle model с RK4 step, JIT-ready
+
+**Технические детали:**
+
+`tick(dt)` вместо `update(dt)` в GameObject — Ursina автоматически вызывает `Entity.update()` без аргументов, конфликт сигнатуры привёл бы к ошибке.
+
+Key binding pattern:
+```python
+object_manager.bind(my_object.decrease_speed,
+    trigger=lambda key: key == '1' and not scene_setup.input_frozen)
+```
+Объекты не знают о клавишах — только о своих действиях.
+
+`object_manager.handle_input(key)` вызывается ДО `input_frozen` guard — триггеры сами управляют условиями.
+
+DiffDrive state = `[x, y, theta]`, control = `[v, omega]`. Использует `math.cos/sin` (быстрее `np.cos/sin` в numba @njit для скаляров).
+
+**Новые файлы:**
+- `src/object_manager.py`
+- `src/math/__init__.py`
+- `src/math/diff_drive.py`
+
+**Участники:** Пользователь + Claude Haiku 4.5
+
+---
+
 ## 2026-03-19 (сессия 3) - Fix MyObject zoom + code review
 
 **Что сделано:**

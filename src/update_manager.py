@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from .scene_setup import SceneSetup
     from .zoom_manager import ZoomManager
     from .input_manager import InputManager
-    from .my_object import MyObject
+    from .object_manager import ObjectManager
 
 
 class UpdateManager:
@@ -27,7 +27,7 @@ class UpdateManager:
         self.scene_setup: Optional["SceneSetup"] = None
         self.zoom_manager: Optional["ZoomManager"] = None
         self.input_manager: Optional["InputManager"] = None
-        self.my_object: Optional["MyObject"] = None
+        self.object_manager: Optional["ObjectManager"] = None
 
     def register_scene_setup(self, scene_setup: "SceneSetup") -> None:
         """Register SceneSetup component."""
@@ -41,9 +41,9 @@ class UpdateManager:
         """Register InputManager component."""
         self.input_manager = input_manager
 
-    def register_my_object(self, my_object: "MyObject") -> None:
-        """Register MyObject component."""
-        self.my_object = my_object
+    def register_object_manager(self, object_manager: "ObjectManager") -> None:
+        """Register ObjectManager component."""
+        self.object_manager = object_manager
 
     def update_all(self, dt: float) -> None:
         """
@@ -60,15 +60,9 @@ class UpdateManager:
         if self.scene_setup:
             self.scene_setup.update(dt)
 
-        # Update custom objects
-        if self.my_object:
-            self.my_object.update_position(dt)
-            # Re-apply zoom transform after position change
-            if self.zoom_manager:
-                self.my_object.apply_transform(
-                    self.zoom_manager.a_transformation,
-                    self.zoom_manager.b_translation
-                )
+        # Update game objects (moves them + re-applies zoom transforms)
+        if self.object_manager:
+            self.object_manager.update_all(dt)
 
         # Update zoom system (calculate invariant point)
         if self.zoom_manager:

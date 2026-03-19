@@ -9,9 +9,8 @@ from typing import Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     from .scene_setup import SceneSetup
     from .zoom_manager import ZoomManager
-    from .frame import Frame
     from .window_manager import WindowManager
-    from .my_object import MyObject
+    from .object_manager import ObjectManager
 
 
 class InputManager:
@@ -24,9 +23,8 @@ class InputManager:
     def __init__(self):
         self.scene_setup: Optional["SceneSetup"] = None
         self.zoom_manager: Optional["ZoomManager"] = None
-        self.frame: Optional["Frame"] = None
         self.window_manager: Optional["WindowManager"] = None
-        self.my_object: Optional["MyObject"] = None
+        self.object_manager: Optional["ObjectManager"] = None
 
         print(f"[DEBUG] InputManager initialized (simplified version)")
 
@@ -40,20 +38,15 @@ class InputManager:
         self.zoom_manager = zoom_manager
         print(f"   zoom_manager: registered")
 
-    def register_frame(self, frame: "Frame") -> None:
-        """Register Frame component."""
-        self.frame = frame
-        print(f"   frame: registered")
-
     def register_window_manager(self, window_manager: "WindowManager") -> None:
         """Register WindowManager component."""
         self.window_manager = window_manager
         print(f"   window_manager: registered")
 
-    def register_my_object(self, my_object: "MyObject") -> None:
-        """Register MyObject component."""
-        self.my_object = my_object
-        print(f"   my_object: registered")
+    def register_object_manager(self, object_manager: "ObjectManager") -> None:
+        """Register ObjectManager component."""
+        self.object_manager = object_manager
+        print(f"   object_manager: registered")
 
     def handle_input(self, key: str) -> None:
         """Handle key press."""
@@ -74,18 +67,22 @@ class InputManager:
             self.scene_setup.toggle_freeze()
             return
 
-        # If input is frozen, don't process other commands
+        # === GAME OBJECTS (triggers decide their own conditions) ===
+        if self.object_manager:
+            self.object_manager.handle_input(key)
+
+        # If input is frozen, don't process scene-level commands
         if self.scene_setup and self.scene_setup.input_frozen:
             return
 
         # === ZOOM ===
         if self.zoom_manager:
-            if key == 'e':
+            if key == 'e' or key == 'scroll up':
                 self.zoom_manager.zoom_in()
                 print("   [Zoom] Zoom in")
                 return
 
-            if key == 'q':
+            if key == 'q' or key == 'scroll down':
                 self.zoom_manager.zoom_out()
                 print("   [Zoom] Zoom out")
                 return
@@ -96,19 +93,9 @@ class InputManager:
                 return
 
         # === FRAME ===
-        if key == 'u' and self.frame:
-            self.frame.toggle_visibility()
+        if key == 'u' and self.scene_setup:
+            self.scene_setup.toggle_frame()
             return
-
-        # === MY OBJECT SPEED CONTROL ===
-        if self.my_object:
-            if key == '1':
-                self.my_object.decrease_speed()
-                return
-
-            if key == '2':
-                self.my_object.increase_speed()
-                return
 
         # === DEBUG ===
         if key == 'h':
@@ -137,8 +124,8 @@ class InputManager:
             look_x, look_z = self.zoom_manager.identify_invariant_point()
             print(f"Look point: ({look_x:.4f}, {look_z:.4f})")
 
-        if self.frame:
-            print(f"Frame visible: {self.frame.is_visible()}")
+        if self.scene_setup:
+            print(f"Frame visible: {self.scene_setup.frame.is_visible()}")
 
         print("=" * 50 + "\n")
 

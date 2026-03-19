@@ -34,4 +34,10 @@ class ScalableFloor(Scalable):
         super().__init__(*args, **kwargs)
 
 
+class GameObject(Scalable):
+    """Base class for game objects that need per-frame updates."""
+    def tick(self, dt: float) -> None:
+        pass
+
+
 

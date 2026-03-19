@@ -31,14 +31,13 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 from ursina import Ursina, application
 from src.scene_setup import SceneSetup
-from src.frame import Frame
 from src.zoom_manager import ZoomManager
 from src.window_manager import WindowManager
 from src.color_manager import ColorManager
-from src.scalable import ScalableFloor
+from src.scalable import ScalableFloor, Scalable
 from src.input_manager import InputManager
 from src.update_manager import UpdateManager
-from src.scalable import Scalable
+from src.object_manager import ObjectManager
 from src.my_object import MyObject
 from ursina import color
 
@@ -68,20 +67,13 @@ scene_setup = SceneSetup(
     update_manager=update_manager
 )
 
-# ===== CREATING FRAME (COORDINATE SYSTEM) =====
-frame = Frame(
-    color_manager=color_manager,
-    origin_scale=0.05
-)
-
 print("\nScene created")
 
 # ===== CREATING ZOOM MANAGER =====
 zoom_manager = ZoomManager(scene_setup, color_manager=color_manager)
 
-# Register frame elements in ZoomManager
-for i, entity in enumerate(frame.entities):
-    zoom_manager.register_object(entity, name=f'frame_child_{i}')
+# Register frame entities in ZoomManager (frame lives inside scene_setup)
+scene_setup.register_frame_in_zoom(zoom_manager)
 
 print("   > Zoom Manager created")
 
@@ -96,56 +88,30 @@ floor = ScalableFloor(
 )
 zoom_manager.register_object(floor, name='floor')
 
-test_object_1 = Scalable(
-    model='sphere',
-    scale=1/10,
-    position=(1, 0, 0),
-    color=color.red
-)
-
-test_object_2 = Scalable(
-    model='sphere',
-    scale=1/10,
-    position=(1, 1, 0),
-    color=color.green
-)
-
-test_object_3 = Scalable(
-    model='sphere',
-    scale=1/10,
-    position=(1, 1, 1),
-    color=color.blue
-)
-
-zoom_manager.register_object(test_object_1, name='test_object_1')
-zoom_manager.register_object(test_object_2, name='test_object_2')
-zoom_manager.register_object(test_object_3, name='test_object_3')
-
 print("   > Floor created")
 
-# ===== CREATING MY OBJECT (moving in circle) =====
-my_object = MyObject(
-    radius=1.5,
-    speed=1.0,
-    color_value=color.yellow
-)
-zoom_manager.register_object(my_object, name='my_object')
+# ===== CREATING OBJECT MANAGER =====
+object_manager = ObjectManager(zoom_manager)
+
+# ===== CREATING GAME OBJECTS =====
+my_object_1 = object_manager.create(MyObject, 'my_object', radius=1.5, speed=1.0, color_value=color.yellow)
+
+# ===== KEY BINDINGS =====
+object_manager.bind(my_object_1.decrease_speed, trigger=lambda key: key == '1' and not scene_setup.input_frozen)
+object_manager.bind(my_object_1.increase_speed, trigger=lambda key: key == '2' and not scene_setup.input_frozen)
 
 print("   > MyObject created (moving sphere)")
 
 # ===== REGISTERING COMPONENTS IN MANAGERS =====
-# InputManager needs to know about all components it controls
 input_manager.register_scene_setup(scene_setup)
 input_manager.register_zoom_manager(zoom_manager)
-input_manager.register_frame(frame)
 input_manager.register_window_manager(window_manager)
-input_manager.register_my_object(my_object)
+input_manager.register_object_manager(object_manager)
 
-# UpdateManager needs to know what to update
 update_manager.register_input_manager(input_manager)
 update_manager.register_scene_setup(scene_setup)
 update_manager.register_zoom_manager(zoom_manager)
-update_manager.register_my_object(my_object)
+update_manager.register_object_manager(object_manager)
 
 print("   > Components registered in managers")
 

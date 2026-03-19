@@ -381,6 +381,74 @@ llm/
 
 ---
 
+## Decision #8: Key binding через trigger-лямбды вместо on_input в объектах
+
+**Дата:** 2026-03-19 (сессия 4)
+
+**Проблема:**
+При добавлении `on_input(key)` в каждый GameObject клавиши рассыпаются по объектам. Чтобы понять какие клавиши заняты — нужно смотреть в каждый класс.
+
+**Решение:** Binding system с trigger-лямбдами в ObjectManager
+
+```python
+# Объект знает только о своих действиях:
+class MyObject(GameObject):
+    def increase_speed(self): ...
+
+# Клавиши — только в main.py:
+object_manager.bind(
+    my_object.increase_speed,
+    trigger=lambda key: key == '2' and not scene_setup.input_frozen
+)
+```
+
+**Почему именно так:**
+- ✅ Все клавиши видны в одном месте (main.py)
+- ✅ Объект — чистая логика, без знания об input
+- ✅ Trigger-лямбда = любые условия (frozen, key combos, held_keys)
+- ✅ Легко перебиндить без трогания класса
+- ❌ Немного verbose для простых случаев
+
+**Статус:** ✅ Активно используется
+
+---
+
+## Decision #9: tick(dt) вместо update(dt) в GameObject
+
+**Дата:** 2026-03-19 (сессия 4)
+
+**Проблема:**
+Ursina автоматически вызывает `Entity.update()` на всех Entity без аргументов каждый кадр. Если GameObject определяет `update(self, dt)` — Ursina падает с `TypeError: update() missing 1 required positional argument: 'dt'`.
+
+**Решение:** Использовать имя `tick(dt)` вместо `update(dt)` в GameObject/ObjectManager.
+
+**Почему именно так:**
+- ✅ Нет конфликта с Ursina Entity lifecycle
+- ✅ Явное отличие от ursina-update
+- ✅ `tick` — устоявшийся термин для game loop step
+
+**Статус:** ✅ Активно используется
+
+---
+
+## Decision #10: DiffDrive использует math.cos/sin вместо np.cos/sin
+
+**Дата:** 2026-03-19 (сессия 4)
+
+**Проблема:**
+Функции `_derivative` и `_rk4_step` планируется JIT-компилировать через numba. Для скалярных аргументов numba компилирует `math.cos/sin` быстрее чем `np.cos/sin`.
+
+**Решение:** `import math` + `math.cos(theta)`, numpy только для массивов.
+
+**Почему именно так:**
+- ✅ Быстрее в numba @njit для скаляров
+- ✅ JIT-ready без изменений при добавлении numba
+- ✅ numpy остаётся для операций над массивами (state + k1/2 и т.д.)
+
+**Статус:** ✅ Активно используется
+
+---
+
 ## Шаблон для новых решений
 
 ```markdown

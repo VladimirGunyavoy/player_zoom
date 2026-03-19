@@ -1,6 +1,6 @@
 # Current State - Текущее состояние проекта
 
-**Last updated:** 2026-03-19 (сессия 3)
+**Last updated:** 2026-03-19 (сессия 4)
 
 ---
 
@@ -14,7 +14,7 @@
   - Alt для захвата/освобождения курсора
 
 - ✅ **Zoom система**
-  - E/Q - zoom in/out
+  - E/Q и scroll up/down - zoom in/out
   - R - reset zoom
   - Математически корректная с сохранением invariant point
   - Масштабирование всех зарегистрированных объектов
@@ -30,6 +30,17 @@
   - UpdateManager - координация update() всех компонентов
   - WindowManager - fullscreen (F11), мониторы
   - `U` - toggle frame visibility
+  - Key binding system: `object_manager.bind(func, trigger=lambda key: ...)`
+
+- ✅ **Архитектура объектов**
+  - `GameObject(Scalable)` - базовый класс с `tick(dt)` stub
+  - `ObjectManager` - фабрика + реестр + биндинги клавиш
+  - `Frame` внутри `SceneSetup` (не отдельный объект)
+  - Новый объект = `object_manager.create(MyClass, 'name', **kwargs)`
+
+- ✅ **Математика (src/math/)**
+  - `DiffDrive` - симуляция дифф. привода (unicycle model)
+  - RK4 step, derivative, JIT-ready (numpy + math.cos/sin)
 
 - ✅ **Инфраструктура**
   - ColorManager - управление цветами (с fallback на дефолты)
@@ -60,17 +71,21 @@
 ### Размер кодовой базы:
 ```
 src/
-├── scalable.py           ~38 lines
+├── scalable.py           ~45 lines  (+ GameObject)
 ├── frame.py              ~92 lines
-├── scene_setup.py        ~113 lines
+├── scene_setup.py        ~125 lines (+ Frame внутри, toggle_frame)
 ├── zoom_manager.py       ~103 lines
-├── color_manager.py      ~50 lines (примерно)
-├── window_manager.py     ~100 lines (примерно)
-├── input_manager.py      ~144 lines
-├── update_manager.py     ~70 lines
-└── my_object.py          ~86 lines
+├── color_manager.py      ~50 lines
+├── window_manager.py     ~100 lines
+├── input_manager.py      ~110 lines (упрощён)
+├── update_manager.py     ~60 lines  (упрощён)
+├── object_manager.py     ~50 lines  (новый)
+├── my_object.py          ~80 lines
+└── math/
+    ├── __init__.py       ~2 lines
+    └── diff_drive.py     ~100 lines (новый)
 
-main.py                   ~180 lines
+main.py                   ~130 lines (упрощён)
 ```
 
 **Общий объем:** ~1000 строк кода (без комментариев)
@@ -90,6 +105,15 @@ main.py                   ~180 lines
 ---
 
 ## 📝 Недавние изменения
+
+### 2026-03-19 (сессия 4):
+- ✅ Mouse wheel zoom (scroll up/down = zoom in/out)
+- ✅ `ObjectManager` — фабрика + реестр + binding system
+- ✅ `GameObject(Scalable)` — базовый класс с `tick(dt)`
+- ✅ `Frame` перенесён внутрь `SceneSetup`
+- ✅ Key binding system: `bind(func, trigger=lambda key: ...)` вместо `on_input` в объектах
+- ✅ `tick(dt)` вместо `update(dt)` — избежание конфликта с Ursina Entity.update()
+- ✅ `src/math/diff_drive.py` — симуляция дифф. привода с RK4 и JIT-совместимостью
 
 ### 2026-03-19 (сессия 3):
 - ✅ Фикс Issue #1: MyObject.real_position теперь обновляется при анимации
