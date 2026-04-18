@@ -15,12 +15,14 @@ if TYPE_CHECKING:
 
 class SporeManager:
 
-    def __init__(self, zoom_manager: "ZoomManager", initial_size: float = 0.05):
+    def __init__(self, zoom_manager: "ZoomManager"):
         self._spores: List["Spore"] = []
         self._zoom_manager = zoom_manager
-        self.size = initial_size
+        self.size: float = 1.0  # будет перезаписан при первом register
 
     def register(self, spore: "Spore") -> None:
+        if not self._spores:
+            self.size = spore.scale.x  # берём scale первой споры как эталон
         self._spores.append(spore)
 
     def increase_size(self, factor: float = 1.2) -> None:

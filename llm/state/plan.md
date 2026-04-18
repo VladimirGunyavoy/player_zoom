@@ -1,6 +1,6 @@
 # Plan & Progress - План и прогресс
 
-**Last updated:** 2026-03-19
+**Last updated:** 2026-04-19
 
 ---
 
@@ -103,21 +103,20 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 
 **Задачи:**
 - [ ] `pip install numba`
-- [ ] В `src/math/diff_drive.py` добавить `@njit` к `_derivative` и `_rk4_step`
-- [ ] Заменить `np.array([...])` на `np.empty(3)` + присваивания (numba)
+- [ ] В `src/math/double_integrator.py` добавить `@njit` к `_step`
 - [ ] Проверить производительность
 
-**Приоритет:** Средний
+**Приоритет:** Низкий
 
 ---
 
-### Создать объект на базе DiffDrive
+### Создать объект на базе DoubleIntegrator
 
 **Статус:** Не начато
 
 **Задачи:**
 - [ ] Создать `src/objects.py` для конкретных GameObject классов
-- [ ] Сделать `DiffDriveObject(GameObject)` — объект управляемый через v/omega
+- [ ] Сделать `DoubleIntegratorObject(GameObject)` — объект управляемый через [ux, uy]
 - [ ] Зарегистрировать в ObjectManager, биндинги в main.py
 
 **Приоритет:** Средний

@@ -6,6 +6,70 @@
 
 ---
 
+## 2026-04-19 (сессия 7) - ScreenManager + рефакторинг биндингов + баг Spore.position
+
+**Что сделано:**
+- 🆕 `src/screen_manager.py` — `ScreenManager` + `Message` (динамический текст на экране через getter)
+- 🔄 `src/object_manager.py` — `bind()` теперь требует `key` и `description`; авторегистрация Spore в SporeManager; `get_help()` возвращает список биндингов
+- 🔄 `src/input_manager.py` — `input_frozen` теперь блокирует все биндинги автоматически (guard перенесён выше `handle_input`)
+- 🔄 `src/spore_manager.py` — `initial_size` теперь берётся от первой зарегистрированной споры
+- 🔄 `src/update_manager.py` — добавлен `register_screen_manager`
+- 🔄 `src/spore.py` — переписан под `Circle` mesh вместо сферы; позиция передаётся как `(x, z)` tuple
+
+**Нерешённый баг:**
+Spore всегда создаётся в позиции (0,0,0) независимо от переданной `position`. Причина — `Scalable.__init__` захватывает `real_position` до того как `apply_transform` при регистрации использует его. Подробнее: `issues.md` Issue #6.
+
+**Технические детали:**
+
+`Message` использует паттерн getter:
+```python
+Message(name='look_point', position=(-0.79, 0.48), getter=lambda: f"Look: {zoom_manager.invariant_point}")
+```
+
+`bind()` новый интерфейс:
+```python
+object_manager.bind(func, trigger=lambda key: key=='3', key='3', description='decrease spore size')
+```
+
+`screen_manager.add_bindings_help(object_manager, position=(...))` — собирает все биндинги в один текстовый блок.
+
+**Участники:** Пользователь + Claude Sonnet 4.6
+
+---
+
+## 2026-04-19 (сессия 6) - Замена DiffDrive → DoubleIntegrator
+
+**Что сделано:**
+- 🔄 `src/math/diff_drive.py` → удалён
+- 🆕 `src/math/double_integrator.py` — 2D double integrator, state=[x,y,vx,vy], control=[ux,uy]
+- 🔄 `src/math/__init__.py` — экспортирует `DoubleIntegrator` вместо `DiffDrive`
+- 🔄 `src/trajectories.py` — переписан под DoubleIntegrator (те же API, новый движок)
+- 🔄 `main.py` — обновлён маппинг `(x, vx, y)` вместо `(x, theta, y)`, убран лишний `from ast import pattern`
+
+**Технические детали:**
+
+Модель — точная масс-точка под управлением ускорения:
+```
+x_ddot = ux,  y_ddot = uy
+state = [x, y, vx, vy],  control = [ux, uy]
+```
+
+Интегрирование аналитическое (линейная система → нет накопления ошибок, нет нужды в RK4):
+```python
+x_new  = x  + vx*dt + 0.5*ux*dt²
+y_new  = y  + vy*dt + 0.5*uy*dt²
+vx_new = vx + ux*dt
+vy_new = vy + uy*dt
+```
+
+Маппинг state → Ursina для SporeManager: `pos=(x, vx, y)` — vx как высота даёт 3D вид в пространстве состояний.
+
+Паттерны управления остались прежними: permutations из `[±1,0], [0,±1]` (теперь это ускорения, не [v,omega]).
+
+**Участники:** Пользователь + Claude Sonnet 4.6
+
+---
+
 ## 2026-03-19 (сессия 5) - Trajectory visualization: Spore + ScalableLine
 
 **Что сделано:**

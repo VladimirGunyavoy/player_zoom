@@ -67,13 +67,13 @@ class InputManager:
             self.scene_setup.toggle_freeze()
             return
 
-        # === GAME OBJECTS (triggers decide their own conditions) ===
-        if self.object_manager:
-            self.object_manager.handle_input(key)
-
         # If input is frozen, don't process scene-level commands
         if self.scene_setup and self.scene_setup.input_frozen:
             return
+
+        # === GAME OBJECTS ===
+        if self.object_manager:
+            self.object_manager.handle_input(key)
 
         # === ZOOM ===
         if self.zoom_manager:

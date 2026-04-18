@@ -1,6 +1,6 @@
 # Current State - Текущее состояние проекта
 
-**Last updated:** 2026-03-19 (сессия 5)
+**Last updated:** 2026-04-19 (сессия 7)
 
 ---
 
@@ -22,32 +22,36 @@
 - ✅ **Визуализация**
   - Координатная система (Frame) с осями XYZ
   - Клетчатый пол (ScalableFloor)
-  - Демонстрационные объекты (3 статичных сферы)
-  - MyObject (движется по кругу)
+  - Spore — плоский круг (Circle mesh), zoom-aware маркер
+  - SporeManager — управление размером спор (3/4)
 
 - ✅ **Управление**
   - InputManager - централизованная обработка ввода
   - UpdateManager - координация update() всех компонентов
   - WindowManager - fullscreen (F11), мониторы
   - `U` - toggle frame visibility
-  - Key binding system: `object_manager.bind(func, trigger=lambda key: ...)`
+  - Key binding system: `object_manager.bind(func, trigger, key, description)` — key и description обязательны
+  - `input_frozen` блокирует все биндинги автоматически (проверка перед `object_manager.handle_input`)
 
 - ✅ **Архитектура объектов**
   - `GameObject(Scalable)` - базовый класс с `tick(dt)` stub
-  - `ObjectManager` - фабрика + реестр + биндинги клавиш
+  - `ObjectManager` - фабрика + реестр + биндинги клавиш + авторегистрация Spore в SporeManager
+  - `ScreenManager` + `Message` — вывод текста на экран, динамический getter каждый кадр
   - `Frame` внутри `SceneSetup` (не отдельный объект)
   - Новый объект = `object_manager.create(MyClass, 'name', **kwargs)`
 
 - ✅ **Математика (src/math/)**
-  - `DiffDrive` - симуляция дифф. привода (unicycle model)
-  - RK4 step, derivative, JIT-ready (numpy + math.cos/sin)
+  - `DoubleIntegrator` - 1D double integrator (x_ddot = u)
+  - state = [x, x_dot], control = u (скаляр)
+  - Точное аналитическое интегрирование (линейная система, без накопления ошибок)
 
-- ✅ **Визуализация траекторий (сессия 5)**
+- ✅ **Визуализация траекторий (сессия 5–6)**
   - `src/trajectories.py` — `generate_trajectories(start_state, pattern_length, tau, N, seed, pattern_index)`
   - `src/spore.py` — статичный маркер-quad, billboard=True, наследник MyObject
   - `src/spore_manager.py` — управление размером всех спор (клавиши 3/4, мультипликативно ×1.2)
   - `src/scalable_line.py` — линия между двумя точками, zoom-aware через override apply_transform
   - `PATTERN_INDICES` + `PATTERN_COLORS` в main.py — контроль какие паттерны и каким цветом
+  - Маппинг state → Ursina: `pos=(x, 0, x_dot)` — phase portrait в плоскости xOz (x = позиция, z = скорость)
 
 - ✅ **Инфраструктура**
   - ColorManager - управление цветами (с fallback на дефолты)
@@ -90,7 +94,7 @@ src/
 ├── my_object.py          ~80 lines
 └── math/
     ├── __init__.py       ~2 lines
-    └── diff_drive.py     ~100 lines (новый)
+    └── double_integrator.py  ~100 lines
 
 main.py                   ~130 lines (упрощён)
 ```
@@ -128,7 +132,7 @@ main.py                   ~130 lines (упрощён)
 - ✅ `Frame` перенесён внутрь `SceneSetup`
 - ✅ Key binding system: `bind(func, trigger=lambda key: ...)` вместо `on_input` в объектах
 - ✅ `tick(dt)` вместо `update(dt)` — избежание конфликта с Ursina Entity.update()
-- ✅ `src/math/diff_drive.py` — симуляция дифф. привода с RK4 и JIT-совместимостью
+- ✅ `src/math/double_integrator.py` — 2D double integrator (x_ddot=ux, y_ddot=uy), точное интегрирование
 
 ### 2026-03-19 (сессия 3):
 - ✅ Фикс Issue #1: MyObject.real_position теперь обновляется при анимации

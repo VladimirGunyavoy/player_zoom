@@ -171,6 +171,24 @@ logger.debug("Zoom in")
 
 ---
 
+### Issue #6: Spore.position не применяется — спора всегда в (0,0,0)
+
+**Описание:**
+`object_manager.create(cls=Spore, name='spore', position=(1,1))` создаёт спору в (0,0,0).
+
+**Причина:**
+`Scalable.__init__` захватывает `real_position = np.array(self.position)` сразу после `Entity.__init__`. Если позиция не передана в `super().__init__()` (а установлена после), `real_position` остаётся `[0,0,0]`. `apply_transform` при регистрации перезаписывает `self.position` из `real_position`.
+
+**Попытки фикса:**
+- Явная передача `position=pos_3d` в `super().__init__()` — не помогло (возможно `np.array(Vec3)` некорректно конвертируется)
+- Явное `self.real_position = np.array(pos_3d, dtype=float)` после super — не помогло
+
+**Статус:** 🔴 Не решено, передано следующему агенту
+
+**Приоритет:** 🟡 Важный
+
+---
+
 ## 🔵 Потенциальные проблемы (не подтверждены)
 
 ### Potential #1: Edge case в identify_invariant_point()

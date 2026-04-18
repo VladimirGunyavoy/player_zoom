@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from .zoom_manager import ZoomManager
     from .input_manager import InputManager
     from .object_manager import ObjectManager
+    from .screen_manager import ScreenManager
 
 
 class UpdateManager:
@@ -28,6 +29,7 @@ class UpdateManager:
         self.zoom_manager: Optional["ZoomManager"] = None
         self.input_manager: Optional["InputManager"] = None
         self.object_manager: Optional["ObjectManager"] = None
+        self.screen_manager: Optional["ScreenManager"] = None
 
     def register_scene_setup(self, scene_setup: "SceneSetup") -> None:
         """Register SceneSetup component."""
@@ -44,6 +46,10 @@ class UpdateManager:
     def register_object_manager(self, object_manager: "ObjectManager") -> None:
         """Register ObjectManager component."""
         self.object_manager = object_manager
+
+    def register_screen_manager(self, screen_manager: "ScreenManager") -> None:
+        """Register ScreenManager component."""
+        self.screen_manager = screen_manager
 
     def update_all(self, dt: float) -> None:
         """
@@ -67,3 +73,7 @@ class UpdateManager:
         # Update zoom system (calculate invariant point)
         if self.zoom_manager:
             self.zoom_manager.identify_invariant_point()
+
+        # Update on-screen messages
+        if self.screen_manager:
+            self.screen_manager.update()
