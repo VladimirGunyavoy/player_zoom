@@ -35,7 +35,7 @@ class ObjectManager:
         self.zoom_manager.register_object(obj, name=name)
         self._objects.append(obj)
         if self._spore_manager is not None and isinstance(obj, Spore):
-            self._spore_manager.register(obj)
+            self._spore_manager.register(name, obj)
         print(f"[ObjectManager] Created and registered: {name}")
         return obj
 
@@ -49,10 +49,10 @@ class ObjectManager:
         """Return all bindings as a formatted string for display."""
         return '\n'.join(f"{key} - {desc}" for _, _, key, desc in self._bindings)
 
-    def update_all(self, dt: float) -> None:
+    def update_all(self) -> None:
         """Update all game objects, then re-apply zoom transforms."""
         for obj in self._objects:
-            obj.tick(dt)
+            obj.tick()
         self.zoom_manager.update_transform()
 
     def handle_input(self, key: str) -> None:

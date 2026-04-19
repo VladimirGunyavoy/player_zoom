@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from .input_manager import InputManager
     from .object_manager import ObjectManager
     from .screen_manager import ScreenManager
+    from .shared_context import SharedContext
 
 
 class UpdateManager:
@@ -30,6 +31,7 @@ class UpdateManager:
         self.input_manager: Optional["InputManager"] = None
         self.object_manager: Optional["ObjectManager"] = None
         self.screen_manager: Optional["ScreenManager"] = None
+        self.shared_context: Optional["SharedContext"] = None
 
     def register_scene_setup(self, scene_setup: "SceneSetup") -> None:
         """Register SceneSetup component."""
@@ -51,6 +53,10 @@ class UpdateManager:
         """Register ScreenManager component."""
         self.screen_manager = screen_manager
 
+    def register_shared_context(self, shared_context: "SharedContext") -> None:
+        """Register SharedContext component."""
+        self.shared_context = shared_context
+
     def update_all(self, dt: float) -> None:
         """
         Main method that should be called every frame from the main loop.
@@ -58,22 +64,24 @@ class UpdateManager:
         Args:
             dt: Delta time from Ursina (time.dt)
         """
-        # Update input manager (per-frame input logic)
         if self.input_manager:
             self.input_manager.update()
 
-        # Update scene (player movement, camera, etc.)
+        # player moves first
         if self.scene_setup:
             self.scene_setup.update(dt)
 
-        # Update game objects (moves them + re-applies zoom transforms)
-        if self.object_manager:
-            self.object_manager.update_all(dt)
-
-        # Update zoom system (calculate invariant point)
+        # look_point depends on player position — calculate after move
         if self.zoom_manager:
             self.zoom_manager.identify_invariant_point()
 
-        # Update on-screen messages
+        # pull fresh data so game objects see it in tick()
+        if self.shared_context:
+            self.shared_context.update()
+
+        # tick objects + re-apply zoom transforms
+        if self.object_manager:
+            self.object_manager.update_all()
+
         if self.screen_manager:
             self.screen_manager.update()

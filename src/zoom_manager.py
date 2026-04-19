@@ -59,7 +59,17 @@ class ZoomManager:
         x_0 = self.scene_setup.player.camera_pivot.world_position.x + dx
         z_0 = self.scene_setup.player.camera_pivot.world_position.z + dy
 
+        self.invariant_point = np.array([x_0, z_0])
         return x_0, z_0
+
+    @property
+    def real_look_point(self) -> np.ndarray:
+        """Invariant point in real (pre-transform) coordinates."""
+        ip = self.invariant_point
+        return np.array([
+            (ip[0] - self.b_translation[0]) / self.a_transformation,
+            (ip[1] - self.b_translation[2]) / self.a_transformation,
+        ])
 
     def update_transform(self) -> None:
         """Apply current transformation to all registered objects."""

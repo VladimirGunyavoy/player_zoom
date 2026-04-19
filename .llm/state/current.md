@@ -1,6 +1,6 @@
 # Current State - Текущее состояние проекта
 
-**Last updated:** 2026-04-19 (сессия 7)
+**Last updated:** 2026-04-19 (сессия 8)
 
 ---
 
@@ -34,11 +34,15 @@
   - `input_frozen` блокирует все биндинги автоматически (проверка перед `object_manager.handle_input`)
 
 - ✅ **Архитектура объектов**
-  - `GameObject(Scalable)` - базовый класс с `tick(dt)` stub
+  - `GameObject(Scalable)` - базовый класс с `tick()` stub (без dt)
   - `ObjectManager` - фабрика + реестр + биндинги клавиш + авторегистрация Spore в SporeManager
   - `ScreenManager` + `Message` — вывод текста на экран, динамический getter каждый кадр
+  - `SharedContext` — контейнер живых данных, `bind(key, getter)` + `update()` каждый кадр
+  - `TauManager` — параметр τ для симуляции (клавиши 1/2)
+  - `GhostSpore` — следует за `ctx.look_point` каждый кадр
+  - `SporeManager` хранит споры в `Dict[name, Spore]`, доступ через `get(name)`
   - `Frame` внутри `SceneSetup` (не отдельный объект)
-  - Новый объект = `object_manager.create(MyClass, 'name', **kwargs)`
+  - Новый объект = `object_manager.create(MyClass, 'name', **kwargs)`, возвращает объект
 
 - ✅ **Математика (src/math/)**
   - `DoubleIntegrator` - 1D double integrator (x_ddot = u)

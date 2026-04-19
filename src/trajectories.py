@@ -1,13 +1,15 @@
 """
-Trajectories - Generate DiffDrive trajectories for all control patterns
-========================================================================
+Trajectories - Generate DoubleIntegrator trajectories for all control patterns
+===============================================================================
 
-Returns a list of trajectories. Each trajectory is a list of states [x, y, theta].
+1D double integrator: state = [x, x_dot], control = u (scalar).
+
+Returns a list of trajectories. Each trajectory is a list of states [x, x_dot].
 """
 
 import numpy as np
 from itertools import permutations
-from .math import DiffDrive
+from .math import DoubleIntegrator
 
 
 def _gen_taus(N, pattern_length, tau, seed=None):
@@ -24,15 +26,14 @@ def _gen_taus(N, pattern_length, tau, seed=None):
 
 
 def _gen_patterns(length):
-    controls = [
-        np.array([ 0,  1]),
-        np.array([ 0, -1]),
-        np.array([ 1,  0]),
-        np.array([-1,  0]),
-    ]
+    """
+    Generate all valid bang-bang control sequences of given length.
+    Controls: u ∈ {+1, -1}. Consecutive opposite controls are excluded.
+    """
+    controls = [1.0, -1.0]
     result = []
     for combo in permutations(controls, length):
-        valid = all(not np.array_equal(combo[i], -combo[i + 1]) for i in range(length - 1))
+        valid = all(combo[i] != -combo[i + 1] for i in range(length - 1))
         if valid:
             result.append(combo)
     return result
@@ -43,7 +44,7 @@ def generate_trajectories(start_state, pattern_length, tau, N, seed=None, patter
     Generate trajectories for control patterns of given length.
 
     Args:
-        start_state:    [x, y, theta]
+        start_state:    [x, x_dot]
         pattern_length: number of controls in each pattern
         tau:            total time per trajectory
         N:              number of random tau sets per pattern
@@ -51,22 +52,61 @@ def generate_trajectories(start_state, pattern_length, tau, N, seed=None, patter
         pattern_index:  if given, use only that one pattern; otherwise use all patterns
 
     Returns:
-        list of trajectories, each = list of np.array([x, y, theta])
+        list of trajectories, each = list of np.array([x, x_dot])
     """
     all_patterns = _gen_patterns(pattern_length)
     patterns = [all_patterns[pattern_index]] if pattern_index is not None else all_patterns
     taus_list = _gen_taus(N=N, pattern_length=pattern_length, tau=tau, seed=seed)
 
-    drive = DiffDrive()
+    integrator = DoubleIntegrator()
     trajectories = []
 
     for pattern in patterns:
         for taus in taus_list:
-            drive.reset(*start_state)
+            integrator.reset(*start_state)
             states = [np.array(start_state, dtype=float)]
-            for i, control in enumerate(pattern):
-                next_state = drive.step(control, taus[i])
+            for i, u in enumerate(pattern):
+                next_state = integrator.step(u, taus[i])
                 states.append(next_state.copy())
             trajectories.append(states)
 
     return trajectories
+
+
+def run_pattern(start_state, pattern_index, taus):
+    """
+    Run a single pattern with explicitly specified time intervals.
+
+    Args:
+        start_state:   [x, x_dot]
+        pattern_index: index of the pattern from _gen_patterns(len(taus))
+        taus:          list of time durations, one per control step
+
+    Returns:
+        list of np.array([x, x_dot]) — states at each step including start
+    """
+    pattern = _gen_patterns(len(taus))[pattern_index]
+    integrator = DoubleIntegrator()
+    integrator.reset(*start_state)
+    states = [np.array(start_state, dtype=float)]
+    for u, dt in zip(pattern, taus):
+        states.append(integrator.step(u, dt).copy())
+    return states
+
+
+def generate_endpoints(start_state, pattern_length, tau, N, seed=None, pattern_index=None):
+    """
+    Generate only the final states of all trajectories.
+
+    Returns:
+        list of np.array([x, x_dot]) — one per trajectory
+    """
+    trajectories = generate_trajectories(
+        start_state=start_state,
+        pattern_length=pattern_length,
+        tau=tau,
+        N=N,
+        seed=seed,
+        pattern_index=pattern_index,
+    )
+    return [traj[-1] for traj in trajectories]

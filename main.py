@@ -35,8 +35,10 @@ from src.input_manager import InputManager
 from src.update_manager import UpdateManager
 from src.object_manager import ObjectManager
 from src.screen_manager import ScreenManager, Message
-from src.spore import Spore
+from src.spore import Spore, GhostSpore
 from src.spore_manager import SporeManager
+from src.shared_context import SharedContext
+from src.tau_manager import TauManager
 
 print("=" * 50)
 print("PLAYER ZOOM - Sandbox")
@@ -73,6 +75,15 @@ floor = ScalableFloor(
 )
 zoom_manager.register_object(floor, name='floor')
 
+# ===== SHARED CONTEXT =====
+shared_context = SharedContext()
+shared_context.bind('look_point', lambda: zoom_manager.real_look_point, default=np.zeros(2))
+
+
+# ===== TAU MANAGER =====
+tau_manager = TauManager(initial=0.5)
+shared_context.bind('tau', lambda: tau_manager.tau, default=tau_manager.tau)
+
 # ===== OBJECT MANAGER =====
 object_manager = ObjectManager(zoom_manager)
 
@@ -87,12 +98,38 @@ screen_manager.add_message(Message(
     name='look_point',
     position=(-0.79, 0.48),
     offset=(0.0, 0.0),
-    getter=lambda: f"Look: [{zoom_manager.invariant_point[0]:5.2f} {zoom_manager.invariant_point[1]:5.2f}]"
+    getter=lambda: f"Look: [{shared_context.look_point[0]:5.2f} {shared_context.look_point[1]:5.2f}]"
+))
+
+screen_manager.add_message(Message(
+    name='tau',
+    position=(-0.79, 0.46),
+    offset=(0.0, 0.0),
+    getter=lambda: f"Tau:  {shared_context.tau:5.3f}"
 ))
 
 
-object_manager.create(cls = Spore, name='spore', positions=(1, 1))
 
+
+object_manager.create(cls=Spore, name='spore', position=(1, 1))
+object_manager.create(cls=GhostSpore, name='ghost_spore_0', ctx=shared_context)
+spore_manager.get('ghost_spore_0').color = color.white
+spore_manager.get('ghost_spore_0').alpha = 0.5
+
+a_max = 1/2
+object_manager.create(cls=GhostSpore, name='ghost_spore_1', ctx=shared_context)
+spore_manager.get('ghost_spore_1').tick = lambda: setattr(spore_manager.get('ghost_spore_1'), 'real_position', spore_manager.get('ghost_spore_0').real_position + shared_context.tau * np.array([spore_manager.get('ghost_spore_0').real_position[2], 0, -a_max]))
+
+object_manager.create(cls=GhostSpore, name='ghost_spore_2', ctx=shared_context)
+spore_manager.get('ghost_spore_2').tick = lambda: setattr(spore_manager.get('ghost_spore_2'), 'real_position', spore_manager.get('ghost_spore_0').real_position + shared_context.tau * np.array([spore_manager.get('ghost_spore_0').real_position[2], 0, +a_max]))
+spore_manager.get('ghost_spore_2').color = color.red
+spore_manager.get('ghost_spore_2').alpha = 0.5
+
+
+
+
+object_manager.bind(tau_manager.decrease, trigger=lambda key: key == '1', key='1', description='decrease tau')
+object_manager.bind(tau_manager.increase, trigger=lambda key: key == '2', key='2', description='increase tau')
 object_manager.bind(spore_manager.decrease_size, trigger=lambda key: key == '3', key='3', description='decrease spore size')
 object_manager.bind(spore_manager.increase_size, trigger=lambda key: key == '4', key='4', description='increase spore size')
 
@@ -114,6 +151,7 @@ update_manager.register_scene_setup(scene_setup)
 update_manager.register_zoom_manager(zoom_manager)
 update_manager.register_object_manager(object_manager)
 update_manager.register_screen_manager(screen_manager)
+update_manager.register_shared_context(shared_context)
 
 # ===== LOOP =====
 def update():

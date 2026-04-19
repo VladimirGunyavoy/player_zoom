@@ -1,6 +1,6 @@
 # Player Zoom - Quick Start
 
-**Last updated:** 2026-03-19
+**Last updated:** 2026-04-19
 
 ---
 
@@ -152,7 +152,9 @@ player_zoom/
 │   ├── input_manager.py    # Обработка ввода
 │   ├── update_manager.py   # Координация update() всех компонентов
 │   ├── my_object.py        # Демонстрационный объект
-│   └── watcher.py          # Автоперезапуск при изменении файлов
+│   ├── watcher.py          # Автоперезапуск при изменении файлов
+│   └── math/
+│       └── double_integrator.py  # 2D double integrator (x_ddot=u)
 └── llm/                    # Контекст для AI агентов
 ```
 

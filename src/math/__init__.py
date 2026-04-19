@@ -1,1 +1,1 @@
-from .diff_drive import DiffDrive
+from .double_integrator import DoubleIntegrator

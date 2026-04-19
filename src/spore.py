@@ -9,7 +9,10 @@ Used for trajectory visualization.
 import numpy as np
 from ursina import color, Circle
 from .scalable import GameObject
-from typing import Any
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .shared_context import SharedContext
 
 
 class Spore(GameObject):
@@ -31,3 +34,20 @@ class Spore(GameObject):
 
         self.y_offset = y_offset
         self.real_position = np.array(pos_3d, dtype=float)
+
+
+class GhostSpore(Spore):
+    """Follows the camera look point (invariant point) every frame."""
+
+    def __init__(self, ctx: "SharedContext", *args: Any, **kwargs: Any):
+        y_offset = 0.01
+        super().__init__()
+        self.y_offset = y_offset
+        self.ctx = ctx
+        self.real_position = np.array([0, y_offset, 0], dtype=float)
+        self.color = color.azure
+        self.alpha = 0.5
+
+    def tick(self) -> None:
+        x, z = self.ctx.look_point
+        self.real_position = np.array([x, self.y_offset, z], dtype=float)
