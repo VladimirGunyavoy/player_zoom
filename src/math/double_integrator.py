@@ -1,80 +1,53 @@
 """
-DoubleIntegrator - 1D Double Integrator simulation
-====================================================
+DoubleIntegrator - 1D Double Integrator
+========================================
 
-1D double integrator (point mass on a line):
-    state   = [x, x_dot]
-    control = u  (scalar)
+state   = [x, v]
+control = u  (acceleration)
 
-    x_ddot = u
+Exact analytical step (constant u over interval):
+    x_new = x + v*dt + 0.5*u*dt^2
+    v_new = v + u*dt
 
-Step is computed via exact analytical integration
-(constant control over interval → exact solution for linear system).
+a_max is synced from shared_context.param_manager each tick.
+step() is stateless: takes (x0, v0, u, t) and returns new [x, v].
 
 JIT note:
     _step() is written for numba compatibility.
-    To enable JIT:
-
-        from numba import njit
-
-        @njit
-        def _step(state, u, dt):
-            ...
+    To enable: decorate with @njit from numba.
 """
 
 import numpy as np
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..core.shared_context import SharedContext
 
 
-def _step(state: np.ndarray, u: float, dt: float) -> np.ndarray:
-    """
-    Advance double integrator state by dt under constant control u.
-
-    Exact solution:
-        x_new     = x + x_dot*dt + 0.5*u*dt^2
-        x_dot_new = x_dot + u*dt
-
-    Args:
-        state: [x, x_dot]
-        u:     scalar control (acceleration)
-        dt:    time step in seconds
-
-    Returns:
-        new state [x, x_dot]
-    """
-    x, x_dot = state[0], state[1]
+def _step(x0: float, v0: float, u: float, dt: float) -> np.ndarray:
     new = np.empty(2)
-    new[0] = x + x_dot * dt + 0.5 * u * dt * dt
-    new[1] = x_dot + u * dt
+    new[0] = x0 + v0 * dt + 0.5 * u * dt * dt
+    new[1] = v0 + u * dt
     return new
 
 
 class DoubleIntegrator:
     """
-    1D Double integrator simulation (point mass with scalar acceleration control).
-
-    state:   [x, x_dot]
-    control: u  (scalar, x_ddot = u)
+    1D double integrator (x_ddot = u).
+    Stateless step — no internal position state.
+    a_max is read from shared_context.param_manager and cached via tick().
     """
 
-    def __init__(self, x: float = 0.0, x_dot: float = 0.0):
-        self.state = np.array([x, x_dot], dtype=float)
+    def __init__(self, ctx: "SharedContext"):
+        self._ctx = ctx
+        self.a_max: float = ctx.param_manager.a_max
 
-    @property
-    def x(self) -> float:
-        return self.state[0]
+    def tick(self) -> None:
+        self.a_max = self._ctx.param_manager.a_max
 
-    @property
-    def x_dot(self) -> float:
-        return self.state[1]
-
-    def step(self, u: float, dt: float) -> np.ndarray:
-        """Advance simulation by dt. Returns new state."""
-        self.state = _step(self.state, float(u), dt)
-        return self.state
-
-    def reset(self, x: float = 0.0, x_dot: float = 0.0) -> None:
-        """Reset state."""
-        self.state[:] = [x, x_dot]
+    def step(self, x0: float, v0: float, u: float, t: float) -> np.ndarray:
+        """Compute one step from (x0, v0) under control u for time t. Returns [x, v]."""
+        return _step(x0, v0, u, t)
 
     def __repr__(self) -> str:
-        return f"DoubleIntegrator(x={self.x:.3f}, x_dot={self.x_dot:.3f})"
+        return f"DoubleIntegrator(a_max={self.a_max:.3f})"

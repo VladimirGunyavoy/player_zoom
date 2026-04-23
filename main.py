@@ -37,8 +37,9 @@ from src.core.object_manager import ObjectManager
 from src.core.screen_manager import ScreenManager, Message
 from src.core.shared_context import SharedContext
 from src.core.param_manager import ParamManager
-from src.spores.spore import Spore, GhostSpore
+from src.spores.spore import GhostSpore
 from src.spores.spore_manager import SporeManager
+from src.spores.ghost_spore_family import GhostSporeFamily
 
 print("=" * 50)
 print("PLAYER ZOOM - Sandbox")
@@ -80,16 +81,10 @@ shared_context = SharedContext()
 shared_context.bind('look_point', lambda: zoom_manager.real_look_point, default=np.zeros(2))
 
 
-# ===== PARAM MANAGER =====
-param_manager = ParamManager()
-param_manager.add('tau', 0.5)
-shared_context.bind('tau', lambda: param_manager.tau, default=param_manager.tau)
-
 # ===== OBJECT MANAGER =====
-object_manager = ObjectManager(zoom_manager)
+object_manager = ObjectManager(zoom_manager, shared_context)
 
-spore_manager = SporeManager(zoom_manager)
-object_manager.register_spore_manager(spore_manager)
+spore_manager = SporeManager(zoom_manager, object_manager)
 
 
 # ===== SCREEN MANAGER =====
@@ -102,27 +97,37 @@ screen_manager.add_message(Message(
     getter=lambda: f"Look: [{shared_context.look_point[0]:5.2f} {shared_context.look_point[1]:5.2f}]"
 ))
 
+
+# ===== PARAM MANAGER =====
+param_manager = ParamManager()
+param_manager.add('tau',   0.5, mode='exp',    min_val=0.0)
+param_manager.add('a_max', 0.5, mode='linear', step=0.1,  min_val=0.0)
+param_manager.add('n_tau', 4,   mode='linear', step=1,    min_val=0)
+param_manager.add('n_u',   4,   mode='linear', step=1,    min_val=0)
+shared_context.bind('param_manager', lambda: param_manager, default=param_manager)
+
+
 # ===== PLAY HERE =====
 
-object_manager.create(cls=Spore, name='spore', position=(1, 1))
-object_manager.create(cls=GhostSpore, name='ghost_spore_0', ctx=shared_context)
+spore_manager.create(GhostSpore, 'ghost_spore_0')
 spore_manager.get('ghost_spore_0').color = color.white
 spore_manager.get('ghost_spore_0').alpha = 0.5
 
-a_max = 1/2
-object_manager.create(cls=GhostSpore, name='ghost_spore_1', ctx=shared_context)
-spore_manager.get('ghost_spore_1').tick = lambda: setattr(spore_manager.get('ghost_spore_1'), 'real_position', spore_manager.get('ghost_spore_0').real_position + shared_context.tau * np.array([spore_manager.get('ghost_spore_0').real_position[2], 0, -a_max]))
-
-object_manager.create(cls=GhostSpore, name='ghost_spore_2', ctx=shared_context)
-spore_manager.get('ghost_spore_2').tick = lambda: setattr(spore_manager.get('ghost_spore_2'), 'real_position', spore_manager.get('ghost_spore_0').real_position + shared_context.tau * np.array([spore_manager.get('ghost_spore_0').real_position[2], 0, +a_max]))
-spore_manager.get('ghost_spore_2').color = color.red
-spore_manager.get('ghost_spore_2').alpha = 0.5
+family = GhostSporeFamily(
+    root=spore_manager.get('ghost_spore_0'),
+    spore_manager=spore_manager,
+    ctx=shared_context,
+)
+object_manager.register_tickable(family)
 
 
+# ===== BINDINGS =====
 
-
-input_manager.bind('1', lambda sign: param_manager.tweak('tau', sign), mode='scroll', description='tau', value_getter=lambda: param_manager.tau)
-input_manager.bind('2', lambda sign: spore_manager.increase_size() if sign > 0 else spore_manager.decrease_size(), mode='scroll', description='spore size', value_getter=lambda: spore_manager.size)
+input_manager.bind('1', lambda sign: spore_manager.increase_size() if sign > 0 else spore_manager.decrease_size(), mode='scroll', description='spore size', value_getter=lambda: spore_manager.size)
+input_manager.bind('2', lambda sign: param_manager.tweak('tau',   sign), mode='scroll', description='tau',        value_getter=lambda: param_manager.tau)
+input_manager.bind('3', lambda sign: param_manager.tweak('a_max', sign), mode='scroll', description='a_max',       value_getter=lambda: param_manager.a_max)
+input_manager.bind('4', lambda sign: param_manager.tweak('n_tau', sign), mode='scroll', description='n_tau',       value_getter=lambda: param_manager.n_tau)
+input_manager.bind('5', lambda sign: param_manager.tweak('n_u',   sign), mode='scroll', description='n_u',         value_getter=lambda: param_manager.n_u)
 
 
 # ===== BINDINGS HELP =====

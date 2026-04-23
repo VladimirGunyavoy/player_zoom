@@ -1,6 +1,6 @@
 # Current State - Текущее состояние проекта
 
-**Last updated:** 2026-04-23 (сессия 9)
+**Last updated:** 2026-04-23 (сессия 10)
 
 ---
 
@@ -12,37 +12,36 @@
 - ✅ **Визуализация** — Frame (XYZ оси), клетчатый пол, Spore (Circle), GhostSpore
 - ✅ **ScreenManager + Message** — динамический текст на экране через getter каждый кадр
 
-### Архитектура (сессия 9):
-- ✅ **`src/` реорганизована** на `core/`, `spores/`, `math/`, `utils/`
-- ✅ **`SceneSetup` → `SceneManager`** (файл `scene_manager.py`)
-- ✅ **`register(**kwargs)`** — универсальная регистрация компонентов (вместо `register_X()` методов)
-- ✅ **`tick()`** — единое имя для per-frame обновления у всех компонентов
-- ✅ **`ParamManager`** — хранит именованные параметры (`add`, `tweak`), exp/linear режимы
-- ✅ **`InputManager.bind()`** — биндинги с `mode='press'` и `mode='scroll'` (hold+scroll)
-- ✅ **hold+scroll подавляет зум** — если зажата клавиша параметра, зум не срабатывает
-- ✅ **Подсказка** в `get_help()` с текущими значениями параметров
+### Архитектура (сессия 10):
+- ✅ **`SporeManager.create()`** — прокси к ObjectManager для создания спор
+- ✅ **`ObjectManager`** — знает `shared_context`, auto-inject `ctx` для Spore-субклассов, `register_tickable()`
+- ✅ **`ParamManager`** — поддержка `min_val`/`max_val` с clamping в `tweak()`
+- ✅ **`DoubleIntegrator`** — stateless `step(x0, v0, u, t)`, берёт `ctx`, `tick()` синхронизирует `a_max`
+- ✅ **`GhostSporeFamily`** — сетка `n_tau × (2*n_u+1)` призрачных спор, рекурсивная эволюция через DI
 
-### Управление (актуальное):
-- `1` + scroll — tau
-- `2` + scroll — spore size
-- `scroll` — zoom (если нет зажатой клавиши параметра)
-- `Q/E` — zoom in/out
-- `R` — reset zoom
-- `U` — toggle frame
-- `Alt` — захват/освобождение курсора
-- `F11` — fullscreen
-- `H` — debug info
-- `Esc` — выход
+### Параметры (актуальное):
+- `1` + scroll — spore size
+- `2` + scroll — tau
+- `3` + scroll — a_max (min=0)
+- `4` + scroll — n_tau (шаг 1, min=0)
+- `5` + scroll — n_u (шаг 1, min=0)
+- `scroll` — zoom
 
 ### Математика (src/math/):
-- ✅ `DoubleIntegrator` — 1D double integrator, аналитическое интегрирование
-- ✅ `SporeIntegrator` — обёртка для генерации траекторий
+- ✅ `DoubleIntegrator` — 1D, stateless step, a_max из SharedContext
+- ✅ `SporeIntegrator` — 2D unicycle model (x, y, theta)
+
+### Архитектура (сессия 9):
+- ✅ **`src/` реорганизована** на `core/`, `spores/`, `math/`, `utils/`
+- ✅ **`ParamManager`** — именованные параметры, exp/linear
+- ✅ **`InputManager.bind()`** — mode='press' и mode='scroll'
+- ✅ **`SharedContext`** — живые данные, bind/tick
 
 ---
 
 ## 🔄 Что в процессе
 
-*Нет задач в процессе.*
+- 🔄 **`GhostSporeFamily`** — позиции работают, рёбра (линии между вершинами) не отрисованы
 
 ---
 
@@ -56,29 +55,27 @@
 
 ```
 src/
-  core/         ← переиспользуемое в любом проекте
+  core/
     color_manager.py
     window_manager.py
     input_manager.py
     update_manager.py
-    scene_manager.py      ← (бывший scene_setup.py, класс SceneManager)
+    scene_manager.py
     shared_context.py
-    param_manager.py
-    object_manager.py
+    param_manager.py       ← min_val/max_val
+    object_manager.py      ← shared_context, register_tickable
     scalable.py
-    scalable_line.py
-    scalable_surface.py
-    frame.py
     screen_manager.py
     zoom_manager.py
 
-  spores/       ← специфика этого проекта
+  spores/
     spore.py
-    spore_manager.py
-    trajectories.py
+    spore_manager.py       ← create() прокси
+    ghost_spore_family.py  ← НОВЫЙ
 
-  math/         ← математика
-  utils/        ← watcher.py, nb_logger.py
+  math/
+    double_integrator.py   ← stateless, ctx-aware
+    spore_integrator.py
 ```
 
 ---
@@ -92,4 +89,4 @@ python run.py         # с автоперезапуском
 
 ---
 
-**Статус:** 🟢 Стабилен, все биндинги работают
+**Статус:** 🟢 Стабилен

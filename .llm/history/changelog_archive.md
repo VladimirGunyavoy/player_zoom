@@ -4,6 +4,17 @@
 
 ---
 
+## 2026-04-19 (сессия 7) - ScreenManager + рефакторинг биндингов
+
+**Что сделано:**
+- 🆕 `src/screen_manager.py` — `ScreenManager` + `Message` (динамический текст)
+- 🔄 `src/object_manager.py` — `bind()` требует `key` и `description`; `get_help()`
+- 🔄 `src/input_manager.py` — `input_frozen` блокирует все биндинги
+
+**Участники:** Пользователь + Claude Sonnet 4.6
+
+---
+
 ## 2026-04-19 (сессия 6) - Замена DiffDrive → DoubleIntegrator
 
 **Что сделано:**

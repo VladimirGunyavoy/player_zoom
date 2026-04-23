@@ -3,26 +3,35 @@ SporeManager - Manages visual size of all Spore objects
 =========================================================
 
 Stores current size and updates all registered spores at once.
+Acts as a creation proxy to ObjectManager for Spore subclasses.
 """
 
 import numpy as np
-from typing import Dict, TYPE_CHECKING
+from typing import Dict, Type, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .spore import Spore
     from ..core.zoom_manager import ZoomManager
+    from ..core.object_manager import ObjectManager
 
 
 class SporeManager:
 
-    def __init__(self, zoom_manager: "ZoomManager"):
+    def __init__(self, zoom_manager: "ZoomManager", object_manager: "ObjectManager"):
         self._spores: Dict[str, "Spore"] = {}
         self._zoom_manager = zoom_manager
-        self.size: float = 1.0  # будет перезаписан при первом register
+        self._object_manager = object_manager
+        self.size: float = 1.0
+
+    def create(self, cls: Type["Spore"], name: str, **kwargs) -> "Spore":
+        """Create a Spore via ObjectManager and register it here."""
+        obj = self._object_manager.create(cls=cls, name=name, **kwargs)
+        self.register(name, obj)
+        return obj
 
     def register(self, name: str, spore: "Spore") -> None:
         if not self._spores:
-            self.size = spore.scale.x  # берём scale первой споры как эталон
+            self.size = spore.scale.x
         self._spores[name] = spore
 
     def get(self, name: str) -> "Spore":
