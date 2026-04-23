@@ -26,19 +26,19 @@ from ursina import Ursina, Entity, color
 from ursina.models.procedural.circle import Circle
 
 
-from src.scene_setup import SceneSetup
-from src.zoom_manager import ZoomManager
-from src.window_manager import WindowManager
-from src.color_manager import ColorManager
-from src.scalable import ScalableFloor
-from src.input_manager import InputManager
-from src.update_manager import UpdateManager
-from src.object_manager import ObjectManager
-from src.screen_manager import ScreenManager, Message
-from src.spore import Spore, GhostSpore
-from src.spore_manager import SporeManager
-from src.shared_context import SharedContext
-from src.tau_manager import TauManager
+from src.core.scene_manager import SceneManager
+from src.core.zoom_manager import ZoomManager
+from src.core.window_manager import WindowManager
+from src.core.color_manager import ColorManager
+from src.core.scalable import ScalableFloor
+from src.core.input_manager import InputManager
+from src.core.update_manager import UpdateManager
+from src.core.object_manager import ObjectManager
+from src.core.screen_manager import ScreenManager, Message
+from src.core.shared_context import SharedContext
+from src.core.param_manager import ParamManager
+from src.spores.spore import Spore, GhostSpore
+from src.spores.spore_manager import SporeManager
 
 print("=" * 50)
 print("PLAYER ZOOM - Sandbox")
@@ -53,7 +53,7 @@ input_manager = InputManager()
 update_manager = UpdateManager()
 
 # ===== SCENE =====
-scene_setup = SceneSetup(
+scene_setup = SceneManager(
     init_position=(1.5, -1, -2),
     init_rotation_x=21,
     init_rotation_y=-35,
@@ -80,9 +80,10 @@ shared_context = SharedContext()
 shared_context.bind('look_point', lambda: zoom_manager.real_look_point, default=np.zeros(2))
 
 
-# ===== TAU MANAGER =====
-tau_manager = TauManager(initial=0.5)
-shared_context.bind('tau', lambda: tau_manager.tau, default=tau_manager.tau)
+# ===== PARAM MANAGER =====
+param_manager = ParamManager()
+param_manager.add('tau', 0.5)
+shared_context.bind('tau', lambda: param_manager.tau, default=param_manager.tau)
 
 # ===== OBJECT MANAGER =====
 object_manager = ObjectManager(zoom_manager)
@@ -101,15 +102,7 @@ screen_manager.add_message(Message(
     getter=lambda: f"Look: [{shared_context.look_point[0]:5.2f} {shared_context.look_point[1]:5.2f}]"
 ))
 
-screen_manager.add_message(Message(
-    name='tau',
-    position=(-0.79, 0.46),
-    offset=(0.0, 0.0),
-    getter=lambda: f"Tau:  {shared_context.tau:5.3f}"
-))
-
-
-
+# ===== PLAY HERE =====
 
 object_manager.create(cls=Spore, name='spore', position=(1, 1))
 object_manager.create(cls=GhostSpore, name='ghost_spore_0', ctx=shared_context)
@@ -128,35 +121,34 @@ spore_manager.get('ghost_spore_2').alpha = 0.5
 
 
 
-object_manager.bind(tau_manager.decrease, trigger=lambda key: key == '1', key='1', description='decrease tau')
-object_manager.bind(tau_manager.increase, trigger=lambda key: key == '2', key='2', description='increase tau')
-object_manager.bind(spore_manager.decrease_size, trigger=lambda key: key == '3', key='3', description='decrease spore size')
-object_manager.bind(spore_manager.increase_size, trigger=lambda key: key == '4', key='4', description='increase spore size')
-
-screen_manager.add_bindings_help(object_manager, position=(-0.79, 0.35))
+input_manager.bind('1', lambda sign: param_manager.tweak('tau', sign), mode='scroll', description='tau', value_getter=lambda: param_manager.tau)
+input_manager.bind('2', lambda sign: spore_manager.increase_size() if sign > 0 else spore_manager.decrease_size(), mode='scroll', description='spore size', value_getter=lambda: spore_manager.size)
 
 
+# ===== BINDINGS HELP =====
 
-
-
+screen_manager.add_bindings_help(input_manager, position=(-0.79, 0.35))
 
 # ===== REGISTER COMPONENTS =====
-input_manager.register_scene_setup(scene_setup)
-input_manager.register_zoom_manager(zoom_manager)
-input_manager.register_window_manager(window_manager)
-input_manager.register_object_manager(object_manager)
+input_manager.register(
+    scene_setup=scene_setup,
+    zoom_manager=zoom_manager,
+    window_manager=window_manager,
+    object_manager=object_manager,
+)
 
-update_manager.register_input_manager(input_manager)
-update_manager.register_scene_setup(scene_setup)
-update_manager.register_zoom_manager(zoom_manager)
-update_manager.register_object_manager(object_manager)
-update_manager.register_screen_manager(screen_manager)
-update_manager.register_shared_context(shared_context)
+update_manager.register(
+    input_manager=input_manager,
+    scene_setup=scene_setup,
+    zoom_manager=zoom_manager,
+    object_manager=object_manager,
+    screen_manager=screen_manager,
+    shared_context=shared_context,
+)
 
 # ===== LOOP =====
 def update():
-    import time  # ursina replaces built-in time with its own module providing time.dt
-    update_manager.update_all(time.dt)
+    update_manager.update_all()
 
 def input(key):
     input_manager.handle_input(key)

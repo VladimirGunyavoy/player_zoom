@@ -10,7 +10,7 @@ from typing import Dict, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .spore import Spore
-    from .zoom_manager import ZoomManager
+    from ..core.zoom_manager import ZoomManager
 
 
 class SporeManager:

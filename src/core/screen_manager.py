@@ -6,10 +6,7 @@ Manages Message objects and updates them every frame via UpdateManager.
 """
 
 from ursina import Text
-from typing import Callable, List, Tuple, TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from .object_manager import ObjectManager
+from typing import Any, Callable, List, Tuple
 
 
 class Message:
@@ -44,7 +41,7 @@ class Message:
             scale=0.7,
         )
 
-    def update(self) -> None:
+    def tick(self) -> None:
         self._text_entity.text = self.getter()
 
 
@@ -62,15 +59,15 @@ class ScreenManager:
         self._messages.append(message)
         print(f"[ScreenManager] Added message: {message.name}")
 
-    def add_bindings_help(self, object_manager: "ObjectManager", position: Tuple[float, float], offset: Tuple[float, float] = (0.0, 0.0)) -> None:
-        """Add a message that displays all bindings from ObjectManager."""
+    def add_bindings_help(self, source: Any, position: Tuple[float, float], offset: Tuple[float, float] = (0.0, 0.0)) -> None:
+        """Add a message that displays all bindings from any object with get_help()."""
         self.add_message(Message(
             name='bindings_help',
             position=position,
             offset=offset,
-            getter=object_manager.get_help,
+            getter=source.get_help,
         ))
 
-    def update(self) -> None:
+    def tick(self) -> None:
         for message in self._messages:
-            message.update()
+            message.tick()

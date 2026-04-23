@@ -21,6 +21,6 @@ class SharedContext:
         if not hasattr(self, key):
             setattr(self, key, default)
 
-    def update(self) -> None:
+    def tick(self) -> None:
         for key, getter in self._bindings.items():
             setattr(self, key, getter())

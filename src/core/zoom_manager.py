@@ -8,10 +8,10 @@ from .color_manager import ColorManager
 # Use TYPE_CHECKING to avoid circular import
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from .scene_setup import SceneSetup
+    from .scene_manager import SceneManager
 
 class ZoomManager:
-    def __init__(self, scene_setup: 'SceneSetup',
+    def __init__(self, scene_setup: 'SceneManager',
                  color_manager: Optional[ColorManager] = None):
         self.zoom_fact: float = 1 + 1/8
 
@@ -22,7 +22,7 @@ class ZoomManager:
         self.color_manager: ColorManager = color_manager if color_manager is not None else ColorManager()
 
         self.objects: Dict[str, Scalable] = {}
-        self.scene_setup: 'SceneSetup' = scene_setup
+        self.scene_setup: 'SceneManager' = scene_setup
 
         self.invariant_point: Tuple[float, float, float] = (0, 0, 0)
 
@@ -70,6 +70,9 @@ class ZoomManager:
             (ip[0] - self.b_translation[0]) / self.a_transformation,
             (ip[1] - self.b_translation[2]) / self.a_transformation,
         ])
+
+    def tick(self) -> None:
+        self.identify_invariant_point()
 
     def update_transform(self) -> None:
         """Apply current transformation to all registered objects."""

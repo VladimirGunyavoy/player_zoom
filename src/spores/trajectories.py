@@ -1,5 +1,5 @@
 """
-Trajectories - Generate DoubleIntegrator trajectories for all control patterns
+Trajectories - Generate SporeIntegrator trajectories for all control patterns
 ===============================================================================
 
 1D double integrator: state = [x, x_dot], control = u (scalar).
@@ -9,7 +9,7 @@ Returns a list of trajectories. Each trajectory is a list of states [x, x_dot].
 
 import numpy as np
 from itertools import permutations
-from .math import DoubleIntegrator
+from ..math import SporeIntegrator
 
 
 def _gen_taus(N, pattern_length, tau, seed=None):
@@ -27,13 +27,17 @@ def _gen_taus(N, pattern_length, tau, seed=None):
 
 def _gen_patterns(length):
     """
-    Generate all valid bang-bang control sequences of given length.
-    Controls: u ∈ {+1, -1}. Consecutive opposite controls are excluded.
+    Generate all valid control sequences of given length.
+    Controls: 2D vectors from {(1,0), (-1,0), (0,1), (0,-1)}.
+    Constraint: each coordinate of the next control != same coordinate of the previous.
     """
-    controls = [1.0, -1.0]
+    controls = [(1, 0), (-1, 0), (0, 1), (0, -1)]
     result = []
     for combo in permutations(controls, length):
-        valid = all(combo[i] != -combo[i + 1] for i in range(length - 1))
+        valid = all(
+            combo[i][0] != combo[i + 1][0] and combo[i][1] != combo[i + 1][1]
+            for i in range(length - 1)
+        )
         if valid:
             result.append(combo)
     return result
@@ -58,7 +62,7 @@ def generate_trajectories(start_state, pattern_length, tau, N, seed=None, patter
     patterns = [all_patterns[pattern_index]] if pattern_index is not None else all_patterns
     taus_list = _gen_taus(N=N, pattern_length=pattern_length, tau=tau, seed=seed)
 
-    integrator = DoubleIntegrator()
+    integrator = SporeIntegrator()
     trajectories = []
 
     for pattern in patterns:
@@ -86,7 +90,7 @@ def run_pattern(start_state, pattern_index, taus):
         list of np.array([x, x_dot]) — states at each step including start
     """
     pattern = _gen_patterns(len(taus))[pattern_index]
-    integrator = DoubleIntegrator()
+    integrator = SporeIntegrator()
     integrator.reset(*start_state)
     states = [np.array(start_state, dtype=float)]
     for u, dt in zip(pattern, taus):

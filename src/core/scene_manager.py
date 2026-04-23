@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from .zoom_manager import ZoomManager
 
 # Class for setting up scene, camera and lighting
-class SceneSetup:
+class SceneManager:
     def __init__(self,
                  init_position: Tuple[float, float, float] = (1.5, -1, -2),
                  init_rotation_x: float = 21,
@@ -74,7 +74,7 @@ class SceneSetup:
         """Update cursor state according to input_frozen flag."""
         mouse.locked = not self.input_frozen
         mouse.visible = self.input_frozen
-        print(f"[SceneSetup] Cursor state: locked={mouse.locked}, visible={mouse.visible}")
+        print(f"[SceneManager] Cursor state: locked={mouse.locked}, visible={mouse.visible}")
         
 
     def toggle_freeze(self) -> None:
@@ -88,17 +88,15 @@ class SceneSetup:
         self.player.enabled = not self.input_frozen
 
         status = "unlocked" if self.input_frozen else "locked"
-        print(f"[SceneSetup] Cursor {status} (input_frozen={self.input_frozen})")
+        print(f"[SceneManager] Cursor {status} (input_frozen={self.input_frozen})")
 
-    def update(self, dt: float) -> None:
-        """Updates additional parameters not included in FirstPersonController"""
+    def tick(self) -> None:
         if self.input_manager_mode:
             return
-
         if self.input_frozen:
             return
-
-        self.player.y += (held_keys['space'] - held_keys['shift']) * self.player.speed * dt
+        import time
+        self.player.y += (held_keys['space'] - held_keys['shift']) * self.player.speed * time.dt
     
     def input_handler(self, key: str) -> None:
         """Input handler for program closing and speed control"""
@@ -121,5 +119,5 @@ class SceneSetup:
     def enable_input_manager_mode(self, enabled: bool = True) -> None:
         """Enable or disable InputManager mode."""
         self.input_manager_mode = enabled
-        print(f"[SceneSetup] InputManager mode: {'enabled' if enabled else 'disabled'}")
+        print(f"[SceneManager] InputManager mode: {'enabled' if enabled else 'disabled'}")
         self._update_cursor_state()

@@ -8,11 +8,11 @@ Used for trajectory visualization.
 
 import numpy as np
 from ursina import color, Circle
-from .scalable import GameObject
+from ..core.scalable import GameObject
 from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .shared_context import SharedContext
+    from ..core.shared_context import SharedContext
 
 
 class Spore(GameObject):
@@ -23,7 +23,7 @@ class Spore(GameObject):
 
         super().__init__(
             model=Circle(resolution=32),
-            scale=0.23,
+            scale=0.05,
             color=color.white,
             rotation=(90, 0, 0),
             double_sided=True,
