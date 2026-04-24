@@ -10,7 +10,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 # Import and run watcher
-from watcher import main as watcher_main
+from utils.watcher import main as watcher_main
 
 if __name__ == "__main__":
     watcher_main()

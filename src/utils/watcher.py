@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 # Path to player_zoom root
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 MAIN_SCRIPT = os.path.join(PROJECT_ROOT, 'main.py')
 
 

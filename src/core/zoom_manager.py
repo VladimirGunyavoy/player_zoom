@@ -32,7 +32,6 @@ class ZoomManager:
             name = f"obj_{len(self.objects)}"
         self.objects[name] = obj
         obj.apply_transform(self.a_transformation, self.b_translation)
-        print(f"[ZoomManager] Registered: {name}")
 
     def unregister_object(self, name: str) -> None:
         """Remove object from zoom manager."""

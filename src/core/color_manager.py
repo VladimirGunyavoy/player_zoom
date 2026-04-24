@@ -8,7 +8,7 @@ class ColorManager:
         if colors_file_path is None:
             # Path to colors.json in player_zoom
             # .. -> src/ -> player_zoom/
-            project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+            project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
             colors_file_path = os.path.join(project_root, 'config', 'colors.json')
 
         self.colors_file_path: str = colors_file_path

@@ -4,6 +4,20 @@
 
 ---
 
+## 2026-04-19 (сессия 8) - SharedContext + GhostSpore + TauManager
+
+**Что сделано:**
+- 🆕 `src/shared_context.py` — универсальный контейнер живых данных
+- 🆕 `src/tau_manager.py` — параметр τ
+- 🆕 `GhostSpore` — следует за `ctx.look_point` каждый кадр
+- 🔄 `zoom_manager.py` — добавлен `real_look_point` property
+- 🔄 `spore_manager.py` — `List` → `Dict[str, Spore]`, добавлен `get(name)`
+- 🐛 Исправлена опечатка `positions=` → `position=` (Issue #6)
+
+**Участники:** Пользователь + Claude Sonnet 4.6
+
+---
+
 ## 2026-04-19 (сессия 7) - ScreenManager + рефакторинг биндингов
 
 **Что сделано:**

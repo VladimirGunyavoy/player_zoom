@@ -32,6 +32,8 @@ class SporeManager:
     def register(self, name: str, spore: "Spore") -> None:
         if not self._spores:
             self.size = spore.scale.x
+        else:
+            spore.real_scale = np.array([self.size, self.size, self.size])
         self._spores[name] = spore
 
     def get(self, name: str) -> "Spore":

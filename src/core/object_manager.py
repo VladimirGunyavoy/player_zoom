@@ -29,7 +29,6 @@ class ObjectManager:
         obj = cls(**kwargs)
         self.zoom_manager.register_object(obj, name=name)
         self._objects.append(obj)
-        print(f"[ObjectManager] Created and registered: {name}")
         return obj
 
     def register_tickable(self, obj) -> None:

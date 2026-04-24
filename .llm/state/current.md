@@ -1,6 +1,6 @@
 # Current State - Текущее состояние проекта
 
-**Last updated:** 2026-04-23 (сессия 10)
+**Last updated:** 2026-04-24 (сессия 11)
 
 ---
 
@@ -12,12 +12,17 @@
 - ✅ **Визуализация** — Frame (XYZ оси), клетчатый пол, Spore (Circle), GhostSpore
 - ✅ **ScreenManager + Message** — динамический текст на экране через getter каждый кадр
 
-### Архитектура (сессия 10):
-- ✅ **`SporeManager.create()`** — прокси к ObjectManager для создания спор
-- ✅ **`ObjectManager`** — знает `shared_context`, auto-inject `ctx` для Spore-субклассов, `register_tickable()`
-- ✅ **`ParamManager`** — поддержка `min_val`/`max_val` с clamping в `tweak()`
-- ✅ **`DoubleIntegrator`** — stateless `step(x0, v0, u, t)`, берёт `ctx`, `tick()` синхронизирует `a_max`
-- ✅ **`GhostSporeFamily`** — сетка `n_tau × (2*n_u+1)` призрачных спор, рекурсивная эволюция через DI
+### Архитектура (сессия 11):
+- ✅ **`config/colors.json`** — создан, ColorManager читает его (путь исправлен)
+- ✅ **`LineManager`** — фабрика ScalableLine объектов, регистрирует в ZoomManager
+- ✅ **`GhostSporeFamily`** — рёбра графа (time + control + root→gen1), параметры `name`/`time_sign`/`color_key`
+- ✅ **`_GhostLineFamily`** — приватный класс внутри ghost_spore_family.py
+- ✅ **`family_b`** — вторая семья с `time_sign=-1` (обратное время)
+- ✅ **`SharedContext`** — менеджеры как прямые поля (`ctx.line_manager`, `ctx.color_manager`, etc.)
+- ✅ **Граничные ноды** — j=±n_u подсвечены (зелёный/красный)
+- ✅ **`BoundaryRay`** — луч из граничной точки с противоположным управлением
+- ✅ **`BoundaryRayFamily`** — семья лучей из одной границы (plus_u / minus_u)
+- ✅ **`SporeManager.register`** — новые споры получают текущий `size` при ребилде
 
 ### Параметры (актуальное):
 - `1` + scroll — spore size
@@ -31,23 +36,17 @@
 - ✅ `DoubleIntegrator` — 1D, stateless step, a_max из SharedContext
 - ✅ `SporeIntegrator` — 2D unicycle model (x, y, theta)
 
-### Архитектура (сессия 9):
-- ✅ **`src/` реорганизована** на `core/`, `spores/`, `math/`, `utils/`
-- ✅ **`ParamManager`** — именованные параметры, exp/linear
-- ✅ **`InputManager.bind()`** — mode='press' и mode='scroll'
-- ✅ **`SharedContext`** — живые данные, bind/tick
-
 ---
 
 ## 🔄 Что в процессе
 
-- 🔄 **`GhostSporeFamily`** — позиции работают, рёбра (линии между вершинами) не отрисованы
+- 🔄 **BoundaryRayFamily** — работает, но визуально "каша" при включённых двух семьях + лучах одновременно. Нужно переключение видимости или настройка.
 
 ---
 
 ## ❌ Что сломано / не работает
 
-- ❌ **colors.json** — файл отсутствует, warning в консоли (не критично, дефолты работают)
+*(нет критических проблем)*
 
 ---
 
@@ -56,25 +55,28 @@
 ```
 src/
   core/
-    color_manager.py
+    color_manager.py       ← читает config/colors.json
+    line_manager.py        ← НОВЫЙ: фабрика ScalableLine
     window_manager.py
     input_manager.py
     update_manager.py
     scene_manager.py
-    shared_context.py
-    param_manager.py       ← min_val/max_val
-    object_manager.py      ← shared_context, register_tickable
+    shared_context.py      ← менеджеры как прямые поля
+    param_manager.py
+    object_manager.py
     scalable.py
+    scalable_line.py
     screen_manager.py
     zoom_manager.py
 
   spores/
     spore.py
-    spore_manager.py       ← create() прокси
-    ghost_spore_family.py  ← НОВЫЙ
+    spore_manager.py
+    ghost_spore_family.py  ← рёбра + name/time_sign/color_key + _GhostLineFamily
+    boundary_ray_family.py ← НОВЫЙ: BoundaryRay + BoundaryRayFamily
 
   math/
-    double_integrator.py   ← stateless, ctx-aware
+    double_integrator.py
     spore_integrator.py
 ```
 

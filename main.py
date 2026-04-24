@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 import numpy as np
 
-from ursina import Ursina, Entity, color
+from ursina import Ursina, Entity
 from ursina.models.procedural.circle import Circle
 
 
@@ -30,6 +30,7 @@ from src.core.scene_manager import SceneManager
 from src.core.zoom_manager import ZoomManager
 from src.core.window_manager import WindowManager
 from src.core.color_manager import ColorManager
+from src.core.line_manager import LineManager
 from src.core.scalable import ScalableFloor
 from src.core.input_manager import InputManager
 from src.core.update_manager import UpdateManager
@@ -40,6 +41,7 @@ from src.core.param_manager import ParamManager
 from src.spores.spore import GhostSpore
 from src.spores.spore_manager import SporeManager
 from src.spores.ghost_spore_family import GhostSporeFamily
+from src.spores.boundary_ray_family import BoundaryRayFamily
 
 print("=" * 50)
 print("PLAYER ZOOM - Sandbox")
@@ -80,12 +82,16 @@ zoom_manager.register_object(floor, name='floor')
 shared_context = SharedContext()
 shared_context.bind('look_point', lambda: zoom_manager.real_look_point, default=np.zeros(2))
 
-
 # ===== OBJECT MANAGER =====
 object_manager = ObjectManager(zoom_manager, shared_context)
-
 spore_manager = SporeManager(zoom_manager, object_manager)
+line_manager = LineManager(zoom_manager)
 
+# ===== BIND MANAGERS TO CONTEXT =====
+shared_context.color_manager = color_manager
+shared_context.object_manager = object_manager
+shared_context.spore_manager = spore_manager
+shared_context.line_manager = line_manager
 
 # ===== SCREEN MANAGER =====
 screen_manager = ScreenManager()
@@ -109,25 +115,39 @@ shared_context.bind('param_manager', lambda: param_manager, default=param_manage
 
 # ===== PLAY HERE =====
 
-spore_manager.create(GhostSpore, 'ghost_spore_0')
-spore_manager.get('ghost_spore_0').color = color.white
-spore_manager.get('ghost_spore_0').alpha = 0.5
+root_spore = spore_manager.create(GhostSpore, 'ghost_spore_0')
 
 family = GhostSporeFamily(
-    root=spore_manager.get('ghost_spore_0'),
-    spore_manager=spore_manager,
+    root=root_spore,
     ctx=shared_context,
+    name='fam_a',
+    time_sign=1,
+    color_key='family',
 )
 object_manager.register_tickable(family)
+
+ray_family_plus  = BoundaryRayFamily(family, side='plus_u',  ctx=shared_context)
+ray_family_minus = BoundaryRayFamily(family, side='minus_u', ctx=shared_context)
+object_manager.register_tickable(ray_family_plus)
+object_manager.register_tickable(ray_family_minus)
+
+family_b = GhostSporeFamily(
+    root=root_spore,
+    ctx=shared_context,
+    name='fam_b',
+    time_sign=-1,
+    color_key='family_b',
+)
+object_manager.register_tickable(family_b)
 
 
 # ===== BINDINGS =====
 
 input_manager.bind('1', lambda sign: spore_manager.increase_size() if sign > 0 else spore_manager.decrease_size(), mode='scroll', description='spore size', value_getter=lambda: spore_manager.size)
-input_manager.bind('2', lambda sign: param_manager.tweak('tau',   sign), mode='scroll', description='tau',        value_getter=lambda: param_manager.tau)
-input_manager.bind('3', lambda sign: param_manager.tweak('a_max', sign), mode='scroll', description='a_max',       value_getter=lambda: param_manager.a_max)
-input_manager.bind('4', lambda sign: param_manager.tweak('n_tau', sign), mode='scroll', description='n_tau',       value_getter=lambda: param_manager.n_tau)
-input_manager.bind('5', lambda sign: param_manager.tweak('n_u',   sign), mode='scroll', description='n_u',         value_getter=lambda: param_manager.n_u)
+input_manager.bind('2', lambda sign: param_manager.tweak('tau',   sign), mode='scroll', description='tau',   value_getter=lambda: param_manager.tau)
+input_manager.bind('3', lambda sign: param_manager.tweak('a_max', sign), mode='scroll', description='a_max', value_getter=lambda: param_manager.a_max)
+input_manager.bind('4', lambda sign: param_manager.tweak('n_tau', sign), mode='scroll', description='n_tau', value_getter=lambda: param_manager.n_tau)
+input_manager.bind('5', lambda sign: param_manager.tweak('n_u',   sign), mode='scroll', description='n_u',   value_getter=lambda: param_manager.n_u)
 
 
 # ===== BINDINGS HELP =====
