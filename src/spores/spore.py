@@ -23,7 +23,7 @@ class Spore(GameObject):
 
         super().__init__(
             model=Circle(resolution=32),
-            scale=0.05,
+            scale=0.02,
             color=color.white,
             rotation=(90, 0, 0),
             double_sided=True,

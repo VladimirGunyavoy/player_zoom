@@ -51,7 +51,7 @@ app = Ursina()
 
 # ===== MANAGERS =====
 color_manager = ColorManager()
-window_manager = WindowManager(monitor='main', fullscreen=False)
+window_manager = WindowManager(monitor='left', fullscreen=False)
 input_manager = InputManager()
 update_manager = UpdateManager()
 

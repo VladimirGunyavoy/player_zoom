@@ -8,7 +8,7 @@ class WindowManager:
 
     # Settings for different monitors
     MONITORS = {
-        "main": {"size": (2750, 1500), "position": (200, 100)},
+        "main": {"size": (2750, 1750), "position": (200, 50)},
         "top": {"size": (1920, 1080), "position": (0, -1080)},
         "left": {"size": (1800, 950), "position": (-1850, 250)},
         "down": {"size": (3000, 1700), "position": (-500, 1500)}
